@@ -166,11 +166,7 @@ function! s:h(scope, fg, ...) " bg, attr_list, special
 endfunction
 
 function! s:Background()
-  if g:dracula_colorterm || has('gui_running')
-    return s:bg
-  else
-    return s:none
-  endif
+  return s:none
 endfunction
 
 "}}}2
