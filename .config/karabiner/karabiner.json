@@ -3128,7 +3128,7 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.googlecode\\.iterm2$"
+                                            "^org\\.gnu\\.Emacs$"
                                         ],
                                         "type": "frontmost_application_if"
                                     }
@@ -3158,7 +3158,7 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.googlecode\\.iterm2$"
+                                            "^org\\.gnu\\.Emacs$"
                                         ],
                                         "type": "frontmost_application_if"
                                     }
@@ -3182,7 +3182,7 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.googlecode\\.iterm2$"
+                                            "^org\\.gnu\\.Emacs$"
                                         ],
                                         "type": "frontmost_application_if"
                                     }
@@ -3212,7 +3212,7 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.googlecode\\.iterm2$"
+                                            "^org\\.gnu\\.Emacs$"
                                         ],
                                         "type": "frontmost_application_if"
                                     }
@@ -3236,7 +3236,7 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.googlecode\\.iterm2$"
+                                            "^org\\.gnu\\.Emacs$"
                                         ],
                                         "type": "frontmost_application_if"
                                     }
@@ -3266,7 +3266,7 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.googlecode\\.iterm2$"
+                                            "^org\\.gnu\\.Emacs$"
                                         ],
                                         "type": "frontmost_application_if"
                                     }
