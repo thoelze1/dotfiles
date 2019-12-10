@@ -5,11 +5,30 @@
 
 (package-initialize)
 
+(require 'epa-file)
+(custom-set-variables '(epa-pinentry-mode 'loopback))
+(custom-set-variables '(epg-gpg-program "/usr/local/bin/gpg"))
+(epa-file-enable)
+
+(setq site-lisp-dir
+      (expand-file-name "site-lisp" user-emacs-directory))
+
+(add-to-list 'load-path site-lisp-dir)
+
+(dolist (project (directory-files site-lisp-dir t "\\w+"))
+  (when (file-directory-p project)
+    (add-to-list 'load-path project)))
+
+(require 'jump-char)
+
+(global-set-key (kbd "M-m") 'jump-char-forward)
+(global-set-key (kbd "M-M") 'jump-char-forward)
+
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
-;; No splash screen please ... jeez
+;; No splash screen please ...jeez
 (setq inhibit-startup-message t)
 
 ;; Find a way to do this earlier in startup

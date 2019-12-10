@@ -1,0 +1,6 @@
+[submodule ".emacs.d/site-lisp/ace-jump-mode"]
+	path = .emacs.d/site-lisp/ace-jump-mode
+	url = https://github.com/winterTTr/ace-jump-mode.git
+[submodule ".emacs.d/site-lisp/jump-char"]
+	path = .emacs.d/site-lisp/jump-char
+	url = https://github.com/lewang/jump-char.git
