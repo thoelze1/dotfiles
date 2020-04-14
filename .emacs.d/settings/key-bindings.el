@@ -59,4 +59,18 @@
                   (interactive)
                   (ignore-errors (backward-char 5))))
 
+(defun org-back-to-indentation ()
+  "Move to start of text on current line"
+  (interactive)
+  (if (org-at-heading-p)
+      (let ()
+        (beginning-of-line)
+        (re-search-forward (concat "^\\(?:" outline-regexp "\\)")
+                           nil t))
+    (back-to-indentation)))
+
+(add-hook 'org-mode-hook
+          (lambda ()
+            (local-set-key (kbd "M-m") 'org-back-to-indentation)))
+
 (provide 'key-bindings)
