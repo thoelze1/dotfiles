@@ -7,3 +7,6 @@
 [submodule ".emacs.d/site-lisp/vimgolf"]
 	path = .emacs.d/site-lisp/vimgolf
 	url = https://github.com/thoelze1/vimgolf.el.git
+[submodule ".emacs.d/site-lisp/spotify"]
+	path = .emacs.d/site-lisp/spotify
+	url = git@github.com:thoelze1/spotify.el.git
