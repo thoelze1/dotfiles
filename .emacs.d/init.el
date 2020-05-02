@@ -58,7 +58,7 @@
   (shell)
   (windmove-left))
 
-(add-hook 'org-mode-hook 'turn-on-auto-fill)
+(require 'org)
 
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
