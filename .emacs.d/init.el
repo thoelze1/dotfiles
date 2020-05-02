@@ -49,7 +49,7 @@
   (shell)
   (windmove-left))
 
-(require 'org)
+(require 'org-settings)
 
 (require 'secrets)
 

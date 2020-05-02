@@ -46,4 +46,4 @@
          :section-numbers nil
          :with-timestamps nil)))
 
-(provide 'org)
+(provide 'org-settings)
