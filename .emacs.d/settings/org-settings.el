@@ -1,6 +1,5 @@
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
 (add-hook 'org-mode-hook 'org-indent-mode) ; does this toggle?
-
 (setq org-directory "~/git/org/")
 (setq org-capture-templates
       '(("j" "Journal" entry
@@ -45,5 +44,20 @@
          :html-postamble nil
          :section-numbers nil
          :with-timestamps nil)))
+(defun org-back-to-indentation ()
+  "Move to start of text on current line"
+  (interactive)
+  (if (org-at-heading-p)
+      (let ()
+        (beginning-of-line)
+        (re-search-forward (concat "^\\(?:" outline-regexp "\\)")p
+                           nil t))
+    (back-to-indentation)))
+(add-hook 'org-mode-hook
+          (lambda ()
+            (local-set-key (kbd "M-m") 'org-back-to-indentation)))
+(global-set-key (kbd "H-c") 'org-capture)
+(global-set-key (kbd "C-c c") 'org-capture)
+(global-set-key (kbd "C-c r") 'org-refile)
 
 (provide 'org-settings)

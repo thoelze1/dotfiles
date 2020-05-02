@@ -6,14 +6,11 @@
 (add-to-list 'load-path site-lisp-dir)
 (add-to-list 'load-path settings-dir)
 
-;; Load appearance settings
-(require 'appearance)
-
+;; Add remote packages to load path
+;; You don't have to require packages 
 (package-initialize)
-
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
-
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -23,47 +20,20 @@
    (quote
     (zenburn-theme avy slime sicp multiple-cursors exec-path-from-shell magit haskell-mode))))
 
-(put 'downcase-region 'disabled nil)
-
+;; Add local projects to load path
 (dolist (project (directory-files site-lisp-dir t "\\w+"))
   (when (file-directory-p project)
     (add-to-list 'load-path project)))
+(require 'spotify)
+(require 'vimgolf)
+
+;; Keep all backups together and all autosaves together
+(setq backup-directory-alist `(("." . "~/.emacs.d/.backups"))
+      auto-save-file-name-transforms `((".*", "~/.emacs.d/.autosaves/\\1" t)))
 
 (setq-default c-basic-offset 4)
 (setq-default indent-tabs-mode nil)
 (setq-default indicate-empty-lines t)
-
-(setq backup-directory-alist `(("." . "~/.emacs.d/.backups"))
-      auto-save-file-name-transforms `((".*", "~/.emacs.d/.autosaves/\\1" t)))
-
-(defun cpp-panes (dirname)
-  (interactive "D")
-  (new-frame)
-  (delete-other-windows)
-  (dired dirname)
-  (split-window-right)
-  (magit-status dirname)
-  (split-window-below)
-  (shell)
-  (windmove-left))
-
-(require 'org-settings)
-
-(require 'secrets)
-
-;; avy stuff
-;; https://github.com/abo-abo/avy/wiki/defcustom
-(setq avy-keys '(?f ?j ?d ?k ?s ?l ?a ?\; ?' ?v ?n ?c ?m ?x ?, ?z
-                 ?. ?b ?/ ?t ?u ?r ?i ?e ?o ?w ?p ?q ?\[ ?5 ?7 ?4
-                 ?8 ?3 ?9 ?2 ?0 ?1 ?- ?6 ?= ?\] ?\\ ?` ?F ?J ?D ?K
-                 ?S ?L ?A ?: ?\" ?V ?N ?C ?M ?X ?< ?Z ?> ?B ?? ?T
-                 ?U ?R ?I ?E ?O ?W ?P ?Q ?{ ?% ?& ?$ ?* ?# ?\( ?@
-                 ?\) ?! ?_ ?^ ?+ ?} ?| ?~))
-(setq avy-case-fold-search nil)
-
-;; spotify stuff
-(require 'spotify)
-(define-key spotify-mode-map (kbd "C-c .") 'spotify-command-map)
 
 ;; Reread these and fix zsh/shell stuff
 ;; https://github.com/purcell/exec-path-from-shell
@@ -71,4 +41,9 @@
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
 
+(require 'org-settings)
+(require 'secrets)
+(require 'spotify-settings)
+(require 'appearance)
 (require 'key-bindings)
+(require 'avy-settings)
