@@ -17,22 +17,21 @@
 ;; Load appearance settings
 (require 'appearance)
 
+(package-initialize)
+
 (require 'package)
+
+(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-archives
-   (quote
-    (("gnu" . "http://elpa.gnu.org/packages/")
-     ("melpa-stable" . "http://stable.melpa.org/packages/"))))
  '(package-selected-packages
    (quote
-    (multiple-cursors exec-path-from-shell magit haskell-mode))))
-
-(package-initialize)
+    (zenburn-theme avy slime sicp multiple-cursors exec-path-from-shell magit haskell-mode))))
 
 (put 'downcase-region 'disabled nil)
 
@@ -60,6 +59,25 @@
 
 (require 'org)
 
+(require 'secrets)
+
+;; avy stuff
+;; https://github.com/abo-abo/avy/wiki/defcustom
+(setq avy-keys '(?f ?j ?d ?k ?s ?l ?a ?\; ?' ?v ?n ?c ?m ?x ?, ?z
+                 ?. ?b ?/ ?t ?u ?r ?i ?e ?o ?w ?p ?q ?\[ ?5 ?7 ?4
+                 ?8 ?3 ?9 ?2 ?0 ?1 ?- ?6 ?= ?\] ?\\ ?` ?F ?J ?D ?K
+                 ?S ?L ?A ?: ?\" ?V ?N ?C ?M ?X ?< ?Z ?> ?B ?? ?T
+                 ?U ?R ?I ?E ?O ?W ?P ?Q ?{ ?% ?& ?$ ?* ?# ?\( ?@
+                 ?\) ?! ?_ ?^ ?+ ?} ?| ?~))
+(setq avy-case-fold-search nil)
+
+;; spotify stuff
+(require 'spotify)
+(define-key spotify-mode-map (kbd "C-c .") 'spotify-command-map)
+
+;; Reread these and fix zsh/shell stuff
+;; https://github.com/purcell/exec-path-from-shell
+;; https://blog.flowblok.id.au/2013-02/shell-startup-scripts.html
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
 
