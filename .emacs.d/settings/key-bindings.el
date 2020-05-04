@@ -25,55 +25,20 @@
 ;; key, and 1 + 5 + 10 = 15 ways of pressing a numbered function key
 ;; for a total of 26 + 15 = 41 ways of pressing a generic "number"
 ;; key. Insane!
-(global-set-key (kbd "H-0") 'delete-window)
-(global-set-key (kbd "H-1") 'delete-other-windows)
-(global-set-key (kbd "H-2") 'split-window-below)
-(global-set-key (kbd "H-3") 'split-window-right)
-(global-set-key (kbd "<home>") 'previous-buffer)
-(global-set-key (kbd "<end>") 'next-buffer)
+(global-set-key (kbd "s-0") 'delete-window)
+(global-set-key (kbd "s-1") 'delete-other-windows)
+(global-set-key (kbd "s-2") 'split-window-below)
+(global-set-key (kbd "s-3") 'split-window-right)
 (global-set-key (kbd "H-g") 'magit-status)
-(require 'jump-char)
-(global-set-key (kbd "H-j") 'jump-char-forward)
-(global-set-key (kbd "H-J") 'jump-char-backward)
 (global-set-key (kbd "<S-f3>") 'kmacro-end-macro)
-(global-set-key (kbd "H-o") 'other-window)
-(global-set-key (kbd "H-4") 'cpp-panes)
 (global-set-key (kbd "H-c") 'mc/edit-lines)
 
-;; Move more quickly. I took this from magnars; I'm not sure I like
-;; these mods, maybe I'll trash or rebind with hyper...
-(global-set-key (kbd "C-S-n")
-                (lambda ()
-                  (interactive)
-                  (ignore-errors (next-line 5))))
+(global-set-key (kbd "s-f") 'make-frame)
+(global-set-key (kbd "s-n") 'other-window)
+(global-set-key (kbd "s-p") 'prev-window)
 
-(global-set-key (kbd "C-S-p")
-                (lambda ()
-                  (interactive)
-                  (ignore-errors (previous-line 5))))
-
-(global-set-key (kbd "C-S-f")
-                (lambda ()
-                  (interactive)
-                  (ignore-errors (forward-char 5))))
-
-(global-set-key (kbd "C-S-b")
-                (lambda ()
-                  (interactive)
-                  (ignore-errors (backward-char 5))))
-
-(defun org-back-to-indentation ()
-  "Move to start of text on current line"
-  (interactive)
-  (if (org-at-heading-p)
-      (let ()
-        (beginning-of-line)
-        (re-search-forward (concat "^\\(?:" outline-regexp "\\)")
-                           nil t))
-    (back-to-indentation)))
-
-(add-hook 'org-mode-hook
-          (lambda ()
-            (local-set-key (kbd "M-m") 'org-back-to-indentation)))
+(global-set-key (kbd "s-o") 'find-file)
+(global-set-key (kbd "s-[") 'previous-buffer)
+(global-set-key (kbd "s-]") 'next-buffer)
 
 (provide 'key-bindings)
