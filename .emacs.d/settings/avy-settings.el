@@ -7,5 +7,5 @@
                  ?U ?R ?I ?E ?O ?W ?P ?Q ?{ ?% ?& ?$ ?* ?# ?\( ?@
                  ?\) ?! ?_ ?^ ?+ ?} ?| ?~))
 (setq avy-case-fold-search nil)
-(global-set-key (kbd "H-j") 'avy-goto-char)
+(global-set-key (kbd "H-a") 'avy-goto-char)
 (provide 'avy-settings)
