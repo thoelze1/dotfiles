@@ -1,8 +1,98 @@
 {
-    "title": "Home row to modifiers",
+    "title": "Forty-percent layout",
     "rules": [
         {
-            "description": "Change f to shift if pressed with other keys",
+            "description": "fn+f to delete (this rule must appear above 'f to shift when held')",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "f",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "left_shift",
+                            "modifiers": [
+                                "fn"
+                            ]
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "delete_or_backspace"
+                        }
+                    ]                    
+                }
+            ]
+        },
+        {
+            "description": "fn+j to enter (this rule must appear above 'j to shift when held')",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "j",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "right_shift",
+                            "modifiers": [
+                                "fn"
+                            ]
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "return_or_enter"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "space to fn when held",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "spacebar",
+                        "modifiers": {
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "fn"
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "spacebar"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "f to shift when held",
             "manipulators": [
                 {
                     "type": "basic",
@@ -28,7 +118,7 @@
             ]
         },
         {
-            "description": "Change d to control if pressed with other keys",
+            "description": "d to control when held",
             "manipulators": [
                 {
                     "type": "basic",
@@ -54,7 +144,7 @@
             ]
         },
         {
-            "description": "Change s to meta if pressed with other keys",
+            "description": "s to meta when held",
             "manipulators": [
                 {
                     "type": "basic",
@@ -80,7 +170,7 @@
             ]
         },
         {
-            "description": "Change a to super if pressed with other keys",
+            "description": "a to super when held",
             "manipulators": [
                 {
                     "type": "basic",
@@ -106,7 +196,7 @@
             ]
         },
         {
-            "description": "Change j to shift if pressed with other keys",
+            "description": "j to shift when held",
             "manipulators": [
                 {
                     "type": "basic",
@@ -132,7 +222,7 @@
             ]
         },
         {
-            "description": "Change k to control if pressed with other keys",
+            "description": "k to control when held",
             "manipulators": [
                 {
                     "type": "basic",
@@ -158,7 +248,7 @@
             ]
         },
         {
-            "description": "Change l to meta if pressed with other keys",
+            "description": "l to meta when held",
             "manipulators": [
                 {
                     "type": "basic",
@@ -184,7 +274,7 @@
             ]
         },
         {
-            "description": "Change semicolon to super if pressed with other keys",
+            "description": "semicolon to super when held",
             "manipulators": [
                 {
                     "type": "basic",
