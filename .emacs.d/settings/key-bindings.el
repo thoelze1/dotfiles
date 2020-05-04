@@ -1,7 +1,10 @@
 ;; This is the global behavior in OSX so we'll keep that for emacs
-(global-set-key (kbd "<s-backspace>") (lambda ()
-                                        (interactive)
-                                        (kill-line 0)))
+(global-set-key (kbd "s-<backspace>")
+                (lambda ()
+                  (interactive)
+                  (if (= (current-column) 0)
+                      (backward-delete-char 1)
+                    (kill-line 0))))
 
 ;; I have karabiner map space to fn globally. I then have emacs map fn
 ;; to hyper. However, OSX translates some keychords containing fn into
