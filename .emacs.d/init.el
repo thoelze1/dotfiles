@@ -16,9 +16,12 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(org-agenda-files
+   (quote
+    ("~/git/org/activites.org" "~/git/thoelze1.github.io/org/sicp-exercises.org" "~/git/org/vocab.org" "~/git/org/reading.org" "~/git/org/quotes.org" "~/git/org/projects.org" "~/git/org/music.org" "~/git/org/misc.org" "~/git/org/log.org" "~/git/org/journal.org" "~/git/org/blog.org" "~/git/org/8bit.org")))
  '(package-selected-packages
    (quote
-    (zenburn-theme avy slime sicp multiple-cursors exec-path-from-shell magit haskell-mode))))
+    (exwm htmlize org-babel-eval-in-repl paredit zenburn-theme avy slime sicp multiple-cursors exec-path-from-shell magit haskell-mode))))
 
 ;; Add local projects to load path
 (dolist (project (directory-files site-lisp-dir t "\\w+"))
@@ -47,3 +50,33 @@
 (require 'appearance)
 (require 'key-bindings)
 (require 'avy-settings)
+(if (string-equal system-type "gnu/linux")
+    (require 'exwm-settings)))
+
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages '((scheme . t)))
+
+(add-hook 'scheme-mode-hook #'enable-paredit-mode)
+(add-hook 'emacs-lisp-mode-hook #'enable-paredit-mode)
+
+(defun copy-sexp ()
+  (interactive)
+  (save-window-excursion
+    (save-excursion
+      (avy-goto-char ?\()
+      (mark-sexp)
+      (kill-ring-save (point) (mark))
+      (pop-mark)
+      (pop-mark))))
+
+(global-set-key (kbd "C-c C-M-@") 'copy-sexp)
+
+;; (setq geiser-active-implementations '(mit))
+(setq ring-bell-function 'ignore)
