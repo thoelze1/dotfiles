@@ -1,0 +1,30 @@
+INPUT  = LINUX_DEVICE L64 /dev/input/event0
+OUTPUT = UINPUT_SINK
+
+@a = TH 200 a lmet
+@s = TH 200 s lalt
+@d = TH 200 d lctl
+@f = TH 200 f lsft
+@j = TH 200 j rsft
+@k = TH 200 k rctl
+@l = TH 200 l ralt
+@; = TH 200 ; lmet
+@spc = TH 200 spc menu
+
+SRC
+  esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  home end  ins  del  menu
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc                
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft 
+  wkup lctl lmet lalt           spc            ralt prnt rctl pgup up   pgdn
+                                                              left down rght
+
+LAYER hyperspace
+  esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  home end  ins  del  menu
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps @a   @s   @d   @f   g    h    @j   @k   @l   @;   '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  wkup lctl lmet lalt           @spc           ralt prnt rctl pgup up   pgdn
+                                                              left down rght
