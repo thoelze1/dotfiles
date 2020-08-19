@@ -4,14 +4,15 @@
 )
 
 (defalias
-  a (tap-hold 200 a lmet)
-  s (tap-hold 200 s lalt)
-  d (tap-hold 200 d lctl)
-  f (tap-hold 200 f lsft)
-  j (tap-hold 200 j rsft)
-  k (tap-hold 200 k rctl)
-  l (tap-hold 200 l ralt)
-  ; (tap-hold 200 ; rmet)
+  a (tap-next-release a lmet)
+  s (tap-next-release s lalt)
+  d (tap-next-release d rctl)
+  f (tap-next-release f lsft)
+  j (tap-next-release j rsft)
+  k (tap-next-release k rctl)
+  l (tap-next-release l ralt)
+  ; (tap-next-release ; rmet)
+  spc (tap-next-release spc lctl)
 )
 
 (defsrc
@@ -20,7 +21,7 @@
   tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
   caps a    s    d    f    g    h    j    k    l    ;    '    ret
   lsft z    x    c    v    b    n    m    ,    .    /    rsft 
-  wkup lctl lmet lalt           spc            ralt prnt rctl pgup up   pgdn
+       lctl lmet lalt           spc            ralt prnt rctl pgup up   pgdn
                                                               left down rght
 )
 
@@ -30,6 +31,6 @@
   tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
   caps @a   @s   @d   @f   g    h    @j   @k   @l   @;   '    ret
   lsft z    x    c    v    b    n    m    ,    .    /    rsft
-  wkup lctl lmet lalt           spc            ralt prnt rctl pgup up   pgdn
+       lctl lmet lalt           @spc           ralt prnt rctl pgup up   pgdn
                                                               left down rght
 )
