@@ -1,10 +1,9 @@
 ;; This is the global behavior in OSX so we'll keep that for emacs
-(global-set-key (kbd "s-<backspace>")
-                (lambda ()
-                  (interactive)
-                  (if (= (current-column) 0)
-                      (backward-delete-char 1)
-                    (kill-line 0))))
+(global-set-key (kbd "s-<backspace>") (lambda ()
+                                        (interactive)
+                                        (if (= (current-column) 0)
+                                            (backward-delete-char 1)
+                                          (kill-line 0))))
 
 ;; I have karabiner map space to fn globally. I then have emacs map fn
 ;; to hyper. However, OSX translates some keychords containing fn into
@@ -35,10 +34,33 @@
 
 (global-set-key (kbd "s-f") 'make-frame)
 (global-set-key (kbd "s-n") 'other-window)
+(defun prev-window ()
+  (interactive)
+  (other-window -1))
 (global-set-key (kbd "s-p") 'prev-window)
 
 (global-set-key (kbd "s-o") 'find-file)
 (global-set-key (kbd "s-[") 'previous-buffer)
 (global-set-key (kbd "s-]") 'next-buffer)
+(defun next-window-next-buffer ()
+  (interactive)
+  (other-window 1)
+  (next-buffer)
+  (prev-window))
+(defun next-window-prev-buffer ()
+  (interactive)
+  (other-window 1)
+  (previous-buffer)
+  (prev-window))
+
+;; I don't like these bindings because my keyboard rollover doesn't
+;; support using left hand shift (f key) with ] (so I have to use my
+;; right hand for ])
+(global-set-key (kbd "s-{") 'next-window-prev-buffer)
+(global-set-key (kbd "s-}") 'next-window-next-buffer)
+
+;; This works...
+(global-set-key (kbd "<C-s-268632091>") 'next-window-prev-buffer)
+(global-set-key (kbd "<C-s-268632093>") 'next-window-next-buffer)
 
 (provide 'key-bindings)
