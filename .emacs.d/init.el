@@ -12,7 +12,7 @@
 
 ; Remote packages
 ;; Add remote packages to load path
-;; You don't have to require packages 
+;; You don't have to require packages
 (package-initialize)
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
@@ -26,7 +26,11 @@
     ("76c5b2592c62f6b48923c00f97f74bcb7ddb741618283bdb2be35f3c0e1030e3" default)))
  '(package-selected-packages
    (quote
-    (haskell-mode geiser ox-twbs yasnippet exwm htmlize org-babel-eval-in-repl paredit zenburn-theme avy slime sicp multiple-cursors exec-path-from-shell magit))))
+    (fancy-battery xelb haskell-mode geiser ox-twbs yasnippet exwm htmlize org-babel-eval-in-repl paredit zenburn-theme avy slime sicp multiple-cursors exec-path-from-shell magit))))
+
+; Security (? I forget)
+(if (string-equal system-type "gnu/linux")
+    (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
 
 ; Backups, autosaves, desktop
 ;; Keep all backups together and all autosaves together
@@ -38,8 +42,9 @@
 ;; Reread these and fix zsh/shell stuff
 ;; https://github.com/purcell/exec-path-from-shell
 ;; https://blog.flowblok.id.au/2013-02/shell-startup-scripts.html
-(when (memq window-system '(mac ns x))
-  (exec-path-from-shell-initialize))
+(if (string-equal system-type "darwin")
+    (when (memq window-system '(mac ns x))
+      (exec-path-from-shell-initialize)));
 
 ; Dired
 (add-hook 'dired-mode-hook 'auto-revert-mode)
@@ -75,13 +80,15 @@
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
-(add-to-list 'default-frame-alist '(undecorated . t))
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
-(add-to-list 'default-frame-alist '(font . "SF Mono-12"))
+(if (string-equal system-type "darwin")
+    (progn
+      (add-to-list 'default-frame-alist '(font . "SF Mono-12"))
+      (add-to-list 'default-frame-alist '(undecorated . t))
+      (add-to-list 'default-frame-alist '(fullscreen . maximized))))
 ;; set transparency
 ;; https://lwn.net/Articles/88179/
 ;; first value is for active frame, second value is for inactive frame
-(set-frame-parameter (selected-frame) 'alpha '(99 100))
+;; (set-frame-parameter (selected-frame) 'alpha '(99 100))
 (setq ring-bell-function 'ignore)
 
 ; Avy
@@ -100,7 +107,17 @@
     (progn
       (require 'exwm)
       (require 'exwm-config)
-      (exwm-config-default)))
+      (exwm-config-default)
+      (setq fancy-battery-show-percentage t)
+      (fancy-battery-mode)
+      (exwm-input-set-key (kbd "<XF86MonBrightnessDown>")
+		    (lambda ()
+		      (interactive)
+		      (shell-command "light -U 5; light")))
+      (exwm-input-set-key (kbd "<XF86MonBrightnessUp>")
+		    (lambda ()
+		      (interactive)
+		      (shell-command "light -A 5; light")))))
 
 ; Keybindings
 ;; This is the global behavior in OSX so we'll keep that for emacs
@@ -117,7 +134,10 @@
 ;; translations). Therefore, some of the keybindings below use the the
 ;; translation from OSX instead of a chord with H (<home> instead of
 ;; <H-left>, for example)
-(setq ns-function-modifier 'hyper)
+(if (string-equal system-type "darwin")
+    (setq ns-function-modifier 'hyper))
+(if (string-equal system-type "gnu/linux")
+    (setq ns-right-control-modifier 'hyper))
 ;; Note how many bindings we can have for number keys! First, we have
 ;; 10 number keys and 10 numbered function keys. We then have 5
 ;; modifiers (control, shit, meta, super, hyper) which can be chorded,
