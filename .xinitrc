@@ -19,5 +19,8 @@ xset r rate 200 60
 # Load xmodmap key map (for hyper)
 # [[ -f ~/.Xmodmap ]] && xmodmap ~/.Xmodmap
 
+# Run xmodmap
+xmodmap ~/.Xmodmap
+
 # Finally start Emacs
 exec emacs
