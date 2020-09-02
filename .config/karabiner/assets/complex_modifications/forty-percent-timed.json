@@ -1,0 +1,543 @@
+{
+    "title": "Forty-percent layout based on timing",
+    "rules": [
+        {
+            "description": "fn+f to delete (this rule must appear above 'f to shift when held')",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "f",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to_if_held_down": [
+                        {
+                            "key_code": "left_shift",
+                            "modifiers": [
+                                "fn"
+                            ]
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "delete_or_backspace"
+                        }
+                    ]                    
+                }
+            ]
+        },
+        {
+            "description": "fn+j to enter (this rule must appear above 'j to shift when held')",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "j",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to_if_held_down": [
+                        {
+                            "key_code": "right_shift",
+                            "modifiers": [
+                                "fn"
+                            ]
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "return_or_enter"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "space to fn when held",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "spacebar",
+                        "modifiers": {
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to_if_held_down": [
+                        {
+                            "key_code": "fn"
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "spacebar"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "f to shift when held",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "f",
+                        "modifiers": {
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to_if_held_down": [
+                        {
+                            "key_code": "left_shift"
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "f"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "d to control when held",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "d",
+                        "modifiers": {
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to_if_held_down": [
+                        {
+                            "key_code": "left_control"
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "d"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "s to meta when held",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "s",
+                        "modifiers": {
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to_if_held_down": [
+                        {
+                            "key_code": "left_option"
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "s"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "a to super when held",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "a",
+                        "modifiers": {
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to_if_held_down": [
+                        {
+                            "key_code": "left_command"
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "a"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "j to shift when held",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "j",
+                        "modifiers": {
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to_if_held_down": [
+                        {
+                            "key_code": "right_shift"
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "j"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "k to control when held",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "k",
+                        "modifiers": {
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to_if_held_down": [
+                        {
+                            "key_code": "right_control"
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "k"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "l to meta when held",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "l",
+                        "modifiers": {
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to_if_held_down": [
+                        {
+                            "key_code": "right_option"
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "l"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "semicolon to super when held",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "semicolon",
+                        "modifiers": {
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to_if_held_down": [
+                        {
+                            "key_code": "right_command"
+                        }
+                    ],
+                    "to_if_alone": [
+                        {
+                            "key_code": "semicolon"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "fn+q to 1",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "q",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "1"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "fn+w to 2",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "w",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "2"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "fn+e to 3",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "e",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "3"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "fn+r to 4",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "r",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "4"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "fn+t to 5",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "t",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "5"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "fn+y to 6",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "y",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "6"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "fn+u to 7",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "u",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "7"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "fn+i to 8",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "i",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "8"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "fn+o to 9",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "o",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "9"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "description": "fn+p to 0",
+            "manipulators": [
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "p",
+                        "modifiers": {
+                            "mandatory": [
+                                "fn"
+                            ],
+                            "optional": [
+                                "any"
+                            ]
+                        }
+                    },
+                    "to": [
+                        {
+                            "key_code": "0"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

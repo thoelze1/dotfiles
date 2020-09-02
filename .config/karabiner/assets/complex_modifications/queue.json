@@ -1,0 +1,88 @@
+{
+  "title": "Queue",
+  "rules": [
+    {
+      "description": "left arrow behavior",
+      "manipulators": [
+        {
+          "from": {
+            "key_code": "left_arrow"
+          },
+          "to": [
+            {
+              "set_variable": {
+                "name": "left_hold",
+                "value": 1
+              }
+            }
+          ],
+          "to_if_alone": [
+            {
+              "key_code": "left_arrow"
+            }
+          ],
+          "to_after_key_up": [
+            {
+              "set_variable": {
+                "name": "left_hold",
+                "value": 0
+              }
+            },
+            {
+              "set_variable": {
+                "name": "left_as_modifier",
+                "value": 0
+              }
+            }
+          ],
+          "type": "basic"
+        }
+      ]
+    },
+    {
+      "description": "right arrow behavior",
+      "manipulators": [
+        {
+          "from": {
+            "key_code": "right_arrow"
+          },
+          "to": [
+            {
+              "set_variable": {
+                "name": "right_hold",
+                "value": 1
+              }
+            }
+          ],
+          "to_after_key_up": [
+            {
+              "set_variable": {
+                "name": "left_as_modifier",
+                "value": 1
+              }
+            }
+          ],
+          "conditions": [
+            {
+              "type": "variable_if",
+              "name": "left_hold",
+              "value": 1
+            }
+          ],       
+          "type": "basic"
+        },
+        {
+          "from": {
+            "key_code": "right_arrow"
+          },
+          "to": [
+            {
+              "key_code": "vk_none"
+            }
+          ],
+          "type": "basic"
+        }
+      ]
+    }
+  ]
+}

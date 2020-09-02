@@ -11,12 +11,12 @@
                     "basic.simultaneous_threshold_milliseconds": 50,
                     "basic.to_delayed_action_delay_milliseconds": 500,
                     "basic.to_if_alone_timeout_milliseconds": 250,
-                    "basic.to_if_held_down_threshold_milliseconds": 500,
+                    "basic.to_if_held_down_threshold_milliseconds": 200,
                     "mouse_motion_to_scroll.speed": 100
                 },
                 "rules": [
                     {
-                        "description": "Change space to fn if pressed with other keys",
+                        "description": "space to fn when held",
                         "manipulators": [
                             {
                                 "from": {
@@ -42,7 +42,7 @@
                         ]
                     },
                     {
-                        "description": "Change f to shift if pressed with other keys",
+                        "description": "f to shift when held",
                         "manipulators": [
                             {
                                 "from": {
@@ -68,7 +68,7 @@
                         ]
                     },
                     {
-                        "description": "Change d to control if pressed with other keys",
+                        "description": "d to control when held",
                         "manipulators": [
                             {
                                 "from": {
@@ -94,7 +94,7 @@
                         ]
                     },
                     {
-                        "description": "Change s to meta if pressed with other keys",
+                        "description": "s to meta when held",
                         "manipulators": [
                             {
                                 "from": {
@@ -120,7 +120,7 @@
                         ]
                     },
                     {
-                        "description": "Change a to super if pressed with other keys",
+                        "description": "a to super when held",
                         "manipulators": [
                             {
                                 "from": {
@@ -146,7 +146,7 @@
                         ]
                     },
                     {
-                        "description": "Change j to shift if pressed with other keys",
+                        "description": "j to shift when held",
                         "manipulators": [
                             {
                                 "from": {
@@ -172,7 +172,7 @@
                         ]
                     },
                     {
-                        "description": "Change k to control if pressed with other keys",
+                        "description": "k to control when held",
                         "manipulators": [
                             {
                                 "from": {
@@ -198,7 +198,7 @@
                         ]
                     },
                     {
-                        "description": "Change l to meta if pressed with other keys",
+                        "description": "l to meta when held",
                         "manipulators": [
                             {
                                 "from": {
@@ -224,7 +224,7 @@
                         ]
                     },
                     {
-                        "description": "Change semicolon to super if pressed with other keys",
+                        "description": "semicolon to super when held",
                         "manipulators": [
                             {
                                 "from": {
@@ -355,96 +355,7 @@
                 "delay_milliseconds_before_open_device": 1000
             },
             "selected": true,
-            "simple_modifications": [
-                {
-                    "from": {
-                        "key_code": "caps_lock"
-                    },
-                    "to": {
-                        "key_code": "vk_none"
-                    }
-                },
-                {
-                    "from": {
-                        "key_code": "delete_or_backspace"
-                    },
-                    "to": {
-                        "key_code": "vk_none"
-                    }
-                },
-                {
-                    "from": {
-                        "key_code": "fn"
-                    },
-                    "to": {
-                        "key_code": "vk_none"
-                    }
-                },
-                {
-                    "from": {
-                        "key_code": "left_command"
-                    },
-                    "to": {
-                        "key_code": "vk_none"
-                    }
-                },
-                {
-                    "from": {
-                        "key_code": "left_control"
-                    },
-                    "to": {
-                        "key_code": "vk_none"
-                    }
-                },
-                {
-                    "from": {
-                        "key_code": "left_option"
-                    },
-                    "to": {
-                        "key_code": "vk_none"
-                    }
-                },
-                {
-                    "from": {
-                        "key_code": "left_shift"
-                    },
-                    "to": {
-                        "key_code": "vk_none"
-                    }
-                },
-                {
-                    "from": {
-                        "key_code": "right_command"
-                    },
-                    "to": {
-                        "key_code": "vk_none"
-                    }
-                },
-                {
-                    "from": {
-                        "key_code": "right_control"
-                    },
-                    "to": {
-                        "key_code": "vk_none"
-                    }
-                },
-                {
-                    "from": {
-                        "key_code": "right_option"
-                    },
-                    "to": {
-                        "key_code": "vk_none"
-                    }
-                },
-                {
-                    "from": {
-                        "key_code": "right_shift"
-                    },
-                    "to": {
-                        "key_code": "vk_none"
-                    }
-                }
-            ],
+            "simple_modifications": [],
             "virtual_hid_keyboard": {
                 "country_code": 0,
                 "mouse_key_xy_scale": 100
