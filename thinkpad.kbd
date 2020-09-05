@@ -6,13 +6,13 @@
 (defalias
   a (tap-next-release a lmet)
   s (tap-next-release s lalt)
-  d (tap-next-release d rctl)
+  d (tap-next-release d lctl)
   f (tap-next-release f lsft)
   j (tap-next-release j rsft)
-  k (tap-next-release k rctl)
+  k (tap-next-release k lctl)
   l (tap-next-release l ralt)
   ; (tap-next-release ; rmet)
-  spc (tap-next-release spc lctl)
+  spc (tap-next-release spc rctl)
 )
 
 (defsrc
