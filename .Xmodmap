@@ -1,3 +1,4 @@
+!https://wiki.archlinux.org/index.php/Xmodmap
 clear      lock
 clear   control
 clear      mod1
