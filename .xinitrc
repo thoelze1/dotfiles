@@ -19,6 +19,9 @@ xset r rate 200 60
 # Load xmodmap key map (for hyper)
 # [[ -f ~/.Xmodmap ]] && xmodmap ~/.Xmodmap
 
+# Load Xresources
+xrdb -merge ~/.Xresources
+
 # Run xmodmap
 xmodmap ~/.Xmodmap
 

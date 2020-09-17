@@ -191,6 +191,7 @@
       (pop-mark)
       (pop-mark))))
 (global-set-key (kbd "C-c C-M-@") 'copy-sexp)
+(global-set-key (kbd "s-k") 'kill-this-buffer)
 
 ; Org
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
