@@ -10,6 +10,8 @@
 (require 'spotify)
 (require 'vimgolf)
 
+;(add-hook 'emacs-startup-hook (lambda () (make-frame-visible)))
+
 ; Remote packages
 ;; Add remote packages to load path
 ;; You don't have to require packages
@@ -26,7 +28,7 @@
     ("76c5b2592c62f6b48923c00f97f74bcb7ddb741618283bdb2be35f3c0e1030e3" default)))
  '(package-selected-packages
    (quote
-    (fancy-battery xelb haskell-mode geiser ox-twbs yasnippet exwm htmlize org-babel-eval-in-repl paredit zenburn-theme avy slime sicp multiple-cursors exec-path-from-shell magit))))
+    (minibuffer-line fancy-battery xelb haskell-mode geiser ox-twbs yasnippet exwm htmlize org-babel-eval-in-repl paredit zenburn-theme avy slime sicp multiple-cursors exec-path-from-shell magit))))
 
 ; Security (? I forget)
 (if (string-equal system-type "gnu/linux")
@@ -105,11 +107,15 @@
 ; Exwm
 (if (string-equal system-type "gnu/linux")
     (progn
+      ;;(require 'exwm-systemtray)
+      ;;(exwm-systemtray-enable)
+      ;;(setq exwm-systemtray-height 16)
       (require 'exwm)
       (require 'exwm-config)
       (exwm-config-default)
-      (setq fancy-battery-show-percentage t)
-      (fancy-battery-mode)
+      (exwm-enable)
+      ;;(setq fancy-battery-show-percentage t)
+      ;;(fancy-battery-mode)
       (exwm-input-set-key (kbd "<XF86MonBrightnessDown>")
 		    (lambda ()
 		      (interactive)
@@ -191,6 +197,7 @@
       (pop-mark)
       (pop-mark))))
 (global-set-key (kbd "C-c C-M-@") 'copy-sexp)
+(global-set-key (kbd "s-k") 'kill-this-buffer)
 
 ; Org
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
@@ -282,3 +289,94 @@
 
 ; Spotify
 (define-key spotify-mode-map (kbd "C-c .") 'spotify-command-map)
+
+;; if these are put in early-init.el then the frame briefly appears as
+;; less than full screen, then expands (when starting with
+;; emacsclient, at least). if started with emacs, then the frame stays invisible.
+;; (add-to-list 'initial-frame-alist '(visibility . nil))
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+(setq-default mode-line-format nil)
+
+(setq temp-max 25000)
+(setq temp-min 1000)
+(setq temp-default 2500)
+(setq temp-step 100)
+(setq temp temp-default)
+
+(setq brightness-default 0.5)
+(setq brightness brightness-default)
+(setq brightness-step 0.05)
+(setq brightness-max 1.0)
+(setq brightness-min 0.1)
+
+(defun temp-string () (format "%dK" temp))
+
+(defun redshift-update ()
+  (start-process "" nil "redshift" "-P"
+                 "-O" (temp-string)
+                 "-b" (number-to-string brightness)))
+
+;; What's a more lispy way of doing these redshift increment/decrement
+;; functions? A HOF that does a "bounded-add"? 
+(defun temp-increment ()
+  (interactive)
+  (setq temp (min (+ temp temp-step)
+                  temp-max))
+  (redshift-update)
+  (minibuffer-line--update))
+
+(defun temp-decrement ()
+  (interactive)
+  (setq temp (max (- temp temp-step)
+                  temp-min))
+  (redshift-update)
+  (minibuffer-line--update))
+
+(defun brightness-increment ()
+  (interactive)
+  (setq brightness (min (+ brightness brightness-step)
+                        brightness-max))
+  (redshift-update)
+  (minibuffer-line--update))
+
+(defun brightness-decrement ()
+  (interactive)
+  (setq brightness (max (- brightness brightness-step)
+                        brightness-min))
+  (redshift-update)
+  (minibuffer-line--update))
+
+(exwm-input-set-key (kbd "<XF86MonBrightnessDown>") 'brightness-decrement)
+(exwm-input-set-key (kbd "<XF86MonBrightnessUp>") 'brightness-increment)
+(exwm-input-set-key (kbd "<S-XF86MonBrightnessDown>") 'temp-decrement)
+(exwm-input-set-key (kbd "<S-XF86MonBrightnessUp>") 'temp-increment)
+
+(setq window-divider-default-places t)
+(setq window-divider-default-bottom-width 1)
+(setq window-divider-default-right-width 1)
+
+(setq minibuffer-line-refresh-interval 1)
+
+(setq minibuffer-line-format
+      '(" "
+       (:eval
+        (format-time-string "%m/%d/%Y %T"))
+       " | 🔋 "
+       (:eval
+        (battery-format "%p" (funcall battery-status-function)))
+       "%% | "
+       (:eval
+        (format "%.2d" (* brightness 100)))
+       "%% | "
+       (:eval (temp-string))
+       " | "
+       ))
+
+(setq mode-line-format nil)
