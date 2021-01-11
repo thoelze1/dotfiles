@@ -1,0 +1,40 @@
+(defcfg
+  input (iokit-name "Dactyl-Manuform (5x6)")
+  output (kext)
+  fallthrough true
+)
+
+(defsrc
+  esc  1    2    3    4    5                   6    7    8    9    0    -
+  tab  q    w    e    r    t                   y    u    i    o    p    \
+  lsft a    s    d    f    g                   h    j    k    l    ;    '
+  lctl z    x    c    v    b                   n    m    ,    .    down rght
+            pgup pgdn                                    left up
+                      0    spc                 ret  0
+                           rctl del       bspc ralt
+                           lsft lmet      rmet rsft
+)
+
+(defalias
+  a (tap-next-release a lmet)
+  s (tap-next-release s lalt)
+  d (tap-next-release d lctl)
+  f (tap-next-release f fn)
+  j (tap-next-release j fn)
+  k (tap-next-release k rctl)
+  l (tap-next-release l ralt)
+  ; (tap-next-release ; rmet)
+  spc (tap-next-release spc lsft)
+  ret (tap-next-release ret rsft)
+)
+
+(deflayer on
+  esc  1    2    3    4    5                   6    7    8    9    0    -
+  tab  q    w    e    r    t                   y    u    i    o    p    \
+  caps @a   @s   @d   @f   g                   h    @j   @k   @l   @;   '
+  lctl z    x    c    v    b                   n    m    ,    .    down rght
+            pgup pgdn                                    left up
+                      0    @spc                @ret 0
+                           rctl del       bspc ralt
+                           lsft lmet      rmet rsft
+)
