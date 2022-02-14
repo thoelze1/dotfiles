@@ -226,23 +226,65 @@
 (setq org-twbs-head "
 <link  href=\"https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css\" rel=\"stylesheet\">
 <script src=\"https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>
-<script src=\"https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js\"></script>")
+<script src=\"https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js\"></script>
+")
 ;; (setq org-twbs-preamble-format '(("en" "<p class=\"author\">%t</p>")))
 (setq org-export-with-toc 2)
+;; https://emacs.stackexchange.com/questions/36898/proper-way-to-add-to-org-entities-user
+(setq org-entities-user
+      '(("apple" "\\cmdkey" nil "&#8984;" "<kbd>COMMAND</kbd>" "<kbd>COMMAND</kbd>" "⌘")))
+;; https://emacs.stackexchange.com/questions/7323/how-to-add-new-markup-to-org-mode-html-export
+(setq org-html-text-markup-alist '((code . "<kbd>%s</kbd>")))
+;; https://miikanissi.com/blog/website-with-emacs.html
+;; (setq website-header "~/git/thoelze1.github.io/org")
+(defun file-contents (filename)
+  "Return the contents of FILENAME."
+  (with-temp-buffer
+    (insert-file-contents filename)
+    (buffer-string)))
+(defun org-publish-sitemap-function (title list)
+  "Sitemap generation function."
+  (concat "#+TITLE: Tanner Hoelzel\n"
+          (file-contents "~/git/thoelze1.github.io/index-header.org")
+          "* Blog\n"
+          (org-list-to-org list)))
+(defun org-publish-sitemap-format-entry (entry style project)
+  (cond ((not (directory-name-p entry))
+	 (format "%s: [[file:%s][%s]]"
+                 (format-time-string "%Y-%m-%d"
+                                     (org-publish-find-date entry project))
+		 entry
+		 (org-publish-find-title entry project)))
+	((eq style 'tree)
+	 ;; Return only last subdir.
+	 (file-name-nondirectory (directory-file-name entry)))
+	(t entry)))
+(defun strings-to-regexp (&rest files)
+  (rx-to-string (cons 'or files)))
 (setq org-publish-project-alist
-         `(("thoelze1.github.io"
-            :base-directory "~/git/thoelze1.github.io/org"
-            :recursive t
-            :publishing-directory "~/git/thoelze1.github.io"
-            :publishing-function org-twbs-publish-to-html
-            :html-preamble t
-            ;; :with-toc 2
-            ;;:with-toc nil
-            ;;:html-postamble nil
-            ;; :section-numbers nil
-            :with-headline-numbers nil
-            ;;:with-timestamps nil
-            )))
+      '(("resume"
+         :base-directory "~/git/resume"
+         :publishing-directory "~/git/thoelze1.github.io"
+         :base-extension nil
+         :include ("resume.pdf")
+         :publishing-function org-publish-attachment)
+        ("content"
+         :base-directory "~/git/thoelze1.github.io"
+         :publishing-directory "~/git/thoelze1.github.io"
+         :publishing-function org-html-publish-to-html
+         :exclude "\\(?:index-header\\.org\\)" ;; (strings-to-regexp "index-header.org")
+         :with-toc nil
+         :html-postamble nil
+         :section-numbers nil
+         :auto-sitemap t
+         :sitemap-function org-publish-sitemap-function
+         :sitemap-title "Tanner Hoelzel"
+         :sitemap-filename "index.org"
+         :sitemap-style list
+         :sitemap-sort-files anti-chronologically
+         :sitemap-format-entry org-publish-sitemap-format-entry)
+        ("website" :components ("resume" "content"))))
+(setq debug-on-error t)
 (defun org-back-to-indentation ()
   "Move to start of text on current line"
   (interactive)
