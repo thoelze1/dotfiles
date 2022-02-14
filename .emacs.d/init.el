@@ -104,27 +104,6 @@
 (setq avy-case-fold-search nil)
 (global-set-key (kbd "H-a") 'avy-goto-char)
 
-; Exwm
-(if (string-equal system-type "gnu/linux")
-    (progn
-      ;;(require 'exwm-systemtray)
-      ;;(exwm-systemtray-enable)
-      ;;(setq exwm-systemtray-height 16)
-      (require 'exwm)
-      (require 'exwm-config)
-      (exwm-config-default)
-      (exwm-enable)
-      ;;(setq fancy-battery-show-percentage t)
-      ;;(fancy-battery-mode)
-      (exwm-input-set-key (kbd "<XF86MonBrightnessDown>")
-		    (lambda ()
-		      (interactive)
-		      (shell-command "light -U 5; light")))
-      (exwm-input-set-key (kbd "<XF86MonBrightnessUp>")
-		    (lambda ()
-		      (interactive)
-		      (shell-command "light -A 5; light")))))
-
 ; Keybindings
 ;; This is the global behavior in OSX so we'll keep that for emacs
 (global-set-key (kbd "s-<backspace>") (lambda ()
@@ -353,10 +332,30 @@
   (redshift-update)
   (minibuffer-line--update))
 
-(exwm-input-set-key (kbd "<XF86MonBrightnessDown>") 'brightness-decrement)
-(exwm-input-set-key (kbd "<XF86MonBrightnessUp>") 'brightness-increment)
-(exwm-input-set-key (kbd "<S-XF86MonBrightnessDown>") 'temp-decrement)
-(exwm-input-set-key (kbd "<S-XF86MonBrightnessUp>") 'temp-increment)
+; Exwm
+(if (string-equal system-type "gnu/linux")
+    (progn
+      ;;(require 'exwm-systemtray)
+      ;;(exwm-systemtray-enable)
+      ;;(setq exwm-systemtray-height 16)
+      (require 'exwm)
+      (require 'exwm-config)
+      (exwm-config-default)
+      (exwm-enable)
+      ;;(setq fancy-battery-show-percentage t)
+      ;;(fancy-battery-mode)
+      (exwm-input-set-key (kbd "<XF86MonBrightnessDown>")
+		    (lambda ()
+		      (interactive)
+		      (shell-command "light -U 5; light")))
+      (exwm-input-set-key (kbd "<XF86MonBrightnessUp>")
+		    (lambda ()
+		      (interactive)
+		      (shell-command "light -A 5; light")))      
+      (exwm-input-set-key (kbd "<XF86MonBrightnessDown>") 'brightness-decrement)
+      (exwm-input-set-key (kbd "<XF86MonBrightnessUp>") 'brightness-increment)
+      (exwm-input-set-key (kbd "<S-XF86MonBrightnessDown>") 'temp-decrement)
+      (exwm-input-set-key (kbd "<S-XF86MonBrightnessUp>") 'temp-increment)))
 
 (setq window-divider-default-places t)
 (setq window-divider-default-bottom-width 1)
