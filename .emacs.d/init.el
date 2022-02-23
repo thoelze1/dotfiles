@@ -1,9 +1,9 @@
-;; This is a minimal configuration file for emacs whose only job is to
+;; This is a minimal configuration file for emacs whose sole job is to
 ;; load the literal configuration file.
+;;
+;; Note: since this file is named init.el, the literate configuration
+;; file cannot be named init.org due to a circular dependency caused
+;; by org-babel-tangle-file
 
 (require 'org)
-(org-babel-load-file
- (expand-file-name
-  ;; This file cannot be named init.org:
-  ;; https://raindev.io/blog/how-to-not-write-emacs-config-in-org/
-  "~/.emacs.d/tanner.org"))
+(org-babel-load-file "~/.emacs.d/tanner.org")
