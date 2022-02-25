@@ -6,4 +6,4 @@
 ;; by org-babel-tangle-file
 
 (require 'org)
-(org-babel-load-file "~/.emacs.d/tanner.org")
+(org-babel-load-file "~/.emacs.d/init_.org")

@@ -9,10 +9,17 @@ org, you are able to organize and even do away with the overhead of
 additional org keywords (~#+begin_src~, etc) by using formatting, such
 as colored code blocks!
 
+* Startup
+It is possible to declare the initial buffer with
+~initial-buffer-choice~.
+
+#+begin_src emacs-lisp
+  (setq inhibit-splash-screen t)
+#+end_src
+
 * Package management
 There are several ways to manage emacs packages, both within and
 without emacs.
-
 ** Within Emacs
 Emacs has a built-in package manager, ~package.el~. By default, its
 sole repository is GNU's [[https://elpa.gnu.org][ELPA]] (Emacs Lisp Package Archive), but we can
@@ -97,23 +104,23 @@ Any local
 
 * Customization
 
-** Debugging
+* Debugging
 #+begin_src emacs-lisp
   (setq debug-on-error t)
 #+end_src
 
-** Dired
+* Dired
 #+begin_src emacs-lisp
   (add-hook 'dired-mode-hook 'auto-revert-mode)
 #+end_src
 
-** Paredit
+* Paredit
 #+begin_src emacs-lisp
   (add-hook 'scheme-mode-hook #'enable-paredit-mode)
   (add-hook 'emacs-lisp-mode-hook #'enable-paredit-mode)
 #+end_src
 
-** Yasnippet
+* Yasnippet
 #+begin_src emacs-lisp
 (use-package yasnippet)
   (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
@@ -121,11 +128,19 @@ Any local
   (yas-reload-all)
 #+end_src
 
-** Ivy
+* Helm
+#+begin_src emacs-lisp
+  (use-package helm)
+  (global-set-key (kbd "M-x") #'helm-M-x)
+  (global-set-key (kbd "C-x r b") #'helm-filtered-bookmarks)
+  (global-set-key (kbd "C-x C-f") #'helm-find-files)
+(global-set-key (kbd "C-x b") #'helm-buffers-list)
+  (helm-mode 1)
+#+end_src
 
-** Geiser
+* Geiser
 
-** Desktop Environment
+* Desktop Environment
 #+begin_src emacs-lisp
   (setq-default mode-line-format nil)
 
@@ -197,13 +212,13 @@ Any local
   (setq mode-line-format nil)
   #+end_src
 
-** Appearance
+* Appearance
 If these are put in early-init.el then the frame briefly appears as
 less than full screen, then expands (when starting with
 emacsclient, at least). if started with emacs, then the frame stays
 invisible.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (add-to-list 'initial-frame-alist '(visibility . nil))
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
 #+end_src
@@ -224,7 +239,7 @@ invisible.
   (setq ring-bell-function 'ignore)
 #+end_src
 
-** Avy
+* Avy
 See https://github.com/abo-abo/avy/wiki/defcustom.
 
 #+begin_src emacs-lisp
@@ -238,18 +253,22 @@ See https://github.com/abo-abo/avy/wiki/defcustom.
   (global-set-key (kbd "H-a") 'avy-goto-char)
 #+end_src
 
-** Tabs and spaces
+* Tabs and spaces
 #+begin_src emacs-lisp
     (setq-default c-basic-offset 4)
     (setq-default indent-tabs-mode nil)
     (setq-default indicate-empty-lines t)
 #+end_src
 
-** Enable functions
+* Enable functions
 #+begin_src emacs-lisp
   (put 'narrow-to-region 'disabled nil)
   (put 'upcase-region 'disabled nil)
 #+end_src
+
+* Auto-generated files
+Emacs generates (sometimes) helpful files, but litters them across the
+filesystem by default. Let's keep them all in one place.
 
 ** Backups and  autosaves
 Emacs uses "autosaves" and "backups" to prevent unintended loss of
@@ -267,7 +286,14 @@ place so that they don't clutter up the filesystem:
   (setq desktop-path '("~/.emacs.d/desktop"))
 #+end_src
 
-** Keyboard Modifiers
+** ~customize~
+
+#+begin_src emacs-lisp
+  (setq custom-file (concat user-emacs-directory "/custom.el"))
+#+end_src
+* Keyboard Setup
+
+** Hyper
 Once we add the ~hyper~ modifier Note how many bindings we can have
 for number keys! First, we have 10 number keys and 10 numbered
 function keys. We then have 5 modifiers (control, shit, meta, super,
@@ -299,7 +325,16 @@ translation from OSX instead of a chord with H (<home> instead of
       (setq ns-right-control-modifier 'hyper))
 #+end_src
 
-** Buffers
+** ASCII Redundancies
+Since we're *never* (hopefully) in a TTY, we want to free up control
+codes that correspond to characters that already exist on the
+keyboard. Maybe one day when I switch to a 40% I'll go back on this,
+but for now it would be cool to free up these keybindings.
+
+But actually, it turns out doing so is a [[https://emacs.stackexchange.com/a/52334][huge fucking rabbit hole]], and
+so I won't (dare to) proceed until I have reason to. 
+
+* Buffers
 #+begin_src emacs-lisp
   (global-set-key (kbd "s-k") 'kill-this-buffer)
 #+end_src
@@ -371,115 +406,37 @@ rollover, but these do:
         (exwm-input-set-key (kbd "<S-XF86MonBrightnessUp>") 'temp-increment)))
 #+end_src
 
-** Org
+* Org
+First some org-wide defaults.
+
 #+begin_src emacs-lisp
-    (add-hook 'org-mode-hook 'turn-on-auto-fill)
-    (add-hook 'org-mode-hook 'org-indent-mode) ; does this toggle?
-    (setq org-directory "~/git/org/")
-    (setq org-capture-templates
-          '(("s" "SICP Exercise" entry
-             (file "~/git/thoelze1.github.io/org/sicp-exercises.org")
-             "* %?")
-            ("j" "Journal" entry
-             (file (lambda () (concat org-directory "journal.org")))
-             "* %U\n%?")
-            ("q" "Quote" entry
-             (file (lambda () (concat org-directory "quotes.org")))
-             "* %?")
-            ("e" "Emacs feature" entry
-             (file+headline (lambda () (concat org-directory "projects.org")) "Emacs features")
-             "* TODO %?")
-            ("p" "Project" entry
-             (file (lambda () (concat org-directory "projects.org")))
-             "* TODO %?")
-            ("l" "Log" entry
-             (file (lambda () (concat org-directory "log.org")))
-             "* %U\n%?")
-            ("r" "Book" entry
-             (file+headline (lambda () (concat org-directory "reading.org")) "Books")
-             "* TODO %?")
-            ("m" "Miscellaneous" entry
-             (file (lambda () (concat org-directory "misc.org")))
-             "* TODO %?" nil nil)
-            ("b" "Blog post ideas" entry
-             (file (lambda () (concat org-directory "blog.org")))
-             "* %? ")
-            ("w" "Websites" entry
-             (file+headline (lambda () (concat org-directory "reading.org")) "Websites")
-             "* %? ")))
-    ;; Also C-c ' is super useful
-    (setq org-src-tab-acts-natively t) ;; Src block indentation was horrible
-    (setq org-src-window-setup 'current-window)
-    (setq org-todo-keywords
-          '((sequence "TODO" "|" "WAITING" "DONE" "CANCELED")))
-    (setq org-default-notes-file (concat org-directory "misc.org"))
-    (setq org-agenda-files '("~/Dropbox/org-agenda"))
-    (setq org-log-note-clock-out 't)
-    (setq org-refile-targets '((org-agenda-files :maxlevel . 4)))
-    (setq org-refile-use-outline-path 'file)
-    (setq inferior-lisp-program "/opt/local/bin/sbcl")
-    (setq org-twbs-head "
-    <link  href=\"https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css\" rel=\"stylesheet\">
-    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>
-    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js\"></script>
-    ")
-    ;; (setq org-twbs-preamble-format '(("en" "<p class=\"author\">%t</p>")))
-    (setq org-export-with-toc 2)
-    ;; https://emacs.stackexchange.com/questions/36898/proper-way-to-add-to-org-entities-user
-    (setq org-entities-user
-          '(("apple" "\\cmdkey" nil "&#8984;" "<kbd>COMMAND</kbd>" "<kbd>COMMAND</kbd>" "⌘")))
-    ;; https://emacs.stackexchange.com/questions/7323/how-to-add-new-markup-to-org-mode-html-export
-    (setq org-html-text-markup-alist '((code . "<kbd>%s</kbd>")))
-    ;; https://miikanissi.com/blog/website-with-emacs.html
-    ;; (setq website-header "~/git/thoelze1.github.io/org")
-    (defun file-contents (filename)
-      "Return the contents of FILENAME."
-      (with-temp-buffer
-        (insert-file-contents filename)
-        (buffer-string)))
-    (defun org-publish-sitemap-function (title list)
-      "Sitemap generation function."
-      (concat "#+TITLE: Tanner Hoelzel\n"
-              (file-contents "~/git/thoelze1.github.io/index-header.org")
-              "* Blog\n"
-              (org-list-to-org list)))
-    (defun org-publish-sitemap-format-entry (entry style project)
-      (cond ((not (directory-name-p entry))
-             (format "%s: [[file:%s][%s]]"
-                     (format-time-string "%Y-%m-%d"
-                                         (org-publish-find-date entry project))
-                     entry
-                     (org-publish-find-title entry project)))
-            ((eq style 'tree)
-             ;; Return only last subdir.
-             (file-name-nondirectory (directory-file-name entry)))
-            (t entry)))
-    (defun strings-to-regexp (&rest files)
-      (rx-to-string (cons 'or files)))
-    (setq org-publish-project-alist
-          '(("resume"
-             :base-directory "~/git/resume"
-             :publishing-directory "~/git/thoelze1.github.io"
-             :base-extension nil
-             :include ("resume.pdf")
-             :publishing-function org-publish-attachment)
-            ("content"
-             :base-directory "~/git/thoelze1.github.io"
-             :publishing-directory "~/git/thoelze1.github.io"
-             :publishing-function org-html-publish-to-html
-             :exclude "\\(?:index-header\\.org\\)" ;; (strings-to-regexp "index-header.org")
-             :with-toc nil
-             :html-postamble nil
-             :section-numbers nil
-             :auto-sitemap t
-             :sitemap-function org-publish-sitemap-function
-             :sitemap-title "Tanner Hoelzel"
-             :sitemap-filename "index.org"
-             :sitemap-style list
-             :sitemap-sort-files anti-chronologically
-             :sitemap-format-entry org-publish-sitemap-format-entry)
-            ("website" :components ("resume" "content"))))
-    (defun org-back-to-indentation ()
+  (setq org-directory "~/git/org/")
+  (add-hook 'org-mode-hook 'turn-on-auto-fill)
+  (add-hook 'org-mode-hook 'org-indent-mode) ; does this toggle?
+  (setq org-src-tab-acts-natively t) ;; Src block indentation was horrible
+  (setq org-src-window-setup 'current-window)
+  (setq org-refile-targets '((org-agenda-files :maxlevel . 4)))
+  (setq org-refile-use-outline-path nil)
+  (org-babel-do-load-languages
+   'org-babel-load-languages '((scheme . t)))
+  (setq org-list-allow-alphabetical t)
+#+end_src
+
+Add org-entities. See https://emacs.stackexchange.com/questions/36898/proper-way-to-add-to-org-entities-user
+#+begin_src emacs-lisp
+  (setq org-entities-user
+        '(("apple" "\\cmdkey" nil "&#8984;" "<kbd>COMMAND</kbd>" "<kbd>COMMAND</kbd>" "⌘")))
+  ;; https://emacs.stackexchange.com/questions/7323/how-to-add-new-markup-to-org-mode-html-export
+  (setq org-html-text-markup-alist '((code . "<kbd>%s</kbd>")))
+#+end_src
+
+Display keyboard input properly in html: https://emacs.stackexchange.com/questions/7323/how-to-add-new-markup-to-org-mode-html-export
+#+begin_src emacs-lisp
+  (setq org-html-text-markup-alist '((code . "<kbd>%s</kbd>")))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+  (defun org-back-to-indentation ()
       "Move to start of text on current line"
       (interactive)
       (if (org-at-heading-p)
@@ -488,23 +445,219 @@ rollover, but these do:
             (re-search-forward (concat "^\\(?:" outline-regexp "\\)")p
                                nil t))
         (back-to-indentation)))
-    (add-hook 'org-mode-hook
-              (lambda ()
-                (local-set-key (kbd "<C-M-return>") 'org-insert-subheading)))
-    (add-hook 'org-mode-hook
-              (lambda ()
-                (local-set-key (kbd "M-m") 'org-back-to-indentation)))
-    (global-set-key (kbd "H-c") 'org-capture)
-    (global-set-key (kbd "C-c c") 'org-capture)
-    (global-set-key (kbd "C-c r") 'org-refile)
-    (global-set-key (kbd "C-c a") 'org-agenda)
-    (org-babel-do-load-languages
-     'org-babel-load-languages '((scheme . t)))
-    (setq org-list-allow-alphabetical t)
-    (setq org-roam-directory "~/Dropbox/org-roam")
 #+end_src
 
-** Custom functions
+** Keybindings
+Some good keybindings:
+- =C=-=c= ='= for ~org-edit-special~
+
+#+begin_src emacs-lisp
+(add-hook 'org-mode-hook
+            (lambda ()
+              (local-set-key (kbd "<C-M-return>") 'org-insert-subheading)))
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (local-set-key (kbd "M-m") 'org-back-to-indentation)))
+  (global-set-key (kbd "H-c") 'org-capture)
+  (global-set-key (kbd "C-c c") 'org-capture)
+  (global-set-key (kbd "C-c r") 'org-refile)
+  (global-set-key (kbd "C-c a") 'org-agenda)
+#+end_src
+
+** Org Capture
+#+begin_src emacs-lisp
+  (setq org-capture-templates
+                '(("s" "SICP Exercise" entry
+                   (file "~/git/thoelze1.github.io/org/sicp-exercises.org")
+                   "* %?")
+                  ("j" "Journal" entry
+                   (file (lambda () (concat org-directory "journal.org")))
+                   "* %U\n%?")
+                  ("q" "Quote" entry
+                   (file (lambda () (concat org-directory "quotes.org")))
+                   "* %?")
+                  ("e" "Emacs feature" entry
+                   (file+headline (lambda () (concat org-directory "projects.org")) "Emacs features")
+                   "* TODO %?")
+                  ("p" "Project" entry
+                   (file (lambda () (concat org-directory "projects.org")))
+                   "* TODO %?")
+                  ("l" "Log" entry
+                   (file (lambda () (concat org-directory "log.org")))
+                   "* %U\n%?")
+                  ("r" "Book" entry
+                   (file+headline (lambda () (concat org-directory "reading.org")) "Books")
+                   "* TODO %?")
+                  ("m" "Miscellaneous" entry
+                   (file (lambda () (concat org-directory "misc.org")))
+                   "* TODO %?" nil nil)
+                  ("b" "Blog post ideas" entry
+                   (file (lambda () (concat org-directory "blog.org")))
+                   "* %? ")
+                  ("w" "Websites" entry
+                   (file+headline (lambda () (concat org-directory "reading.org")) "Websites")
+                   "* %? ")))
+#+end_src
+
+** Org Export/Publish
+I have some custom functions that I use in the publishing process:
+
+#+begin_src emacs-lisp
+  (defun file-contents (filename)
+    "Return the contents of FILENAME."
+    (with-temp-buffer
+      (insert-file-contents filename)
+      (buffer-string)))
+
+  (defun strings-to-regexp (&rest files)
+    (rx-to-string (cons 'or files)))
+#+end_src
+
+Then, the code that I actually use to publish. This should really
+belong with the data being published, as I noted in a blog post.
+
+I use the ~org-export~ sitemap feature as a way of listing all of my
+blog posts:
+
+#+begin_src emacs-lisp
+(defun org-publish-sitemap-function (title list)
+  "Sitemap generation function."
+  (concat "#+TITLE: Tanner Hoelzel\n"
+          (file-contents "~/git/thoelze1.github.io/index-header.org")
+          "* Blog\n"
+          (org-list-to-org list)))
+
+(defun org-publish-sitemap-format-entry (entry style project)
+  (cond ((not (directory-name-p entry))
+         (format "%s: [[file:%s][%s]]"
+                 (format-time-string "%Y-%m-%d"
+                                     (org-publish-find-date entry project))
+                 entry
+                 (org-publish-find-title entry project)))
+        ((eq style 'tree)
+         ;; Return only last subdir.
+         (file-name-nondirectory (directory-file-name entry)))
+        (t entry)))
+#+end_src
+
+#+begin_src emacs-lisp
+  (setq org-twbs-head "
+  <link  href=\"https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css\" rel=\"stylesheet\">
+  <script src=\"https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>
+  <script src=\"https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js\"></script>
+  ")
+  ;; (setq org-twbs-preamble-format '(("en" "<p class=\"author\">%t</p>")))
+  (setq org-export-with-toc 2)
+  ;; https://miikanissi.com/blog/website-with-emacs.html
+  ;; (setq website-header "~/git/thoelze1.github.io/org")
+  (setq org-publish-project-alist
+        '(("resume"
+           :base-directory "~/git/resume"
+           :publishing-directory "~/git/thoelze1.github.io"
+           :base-extension nil
+           :include ("resume.pdf")
+           :publishing-function org-publish-attachment)
+          ("content"
+           :base-directory "~/git/thoelze1.github.io"
+           :publishing-directory "~/git/thoelze1.github.io"
+           :publishing-function org-html-publish-to-html
+           :exclude "\\(?:index-header\\.org\\)" ;; (strings-to-regexp "index-header.org")
+           :with-toc nil
+           :html-postamble nil
+           :section-numbers nil
+           :auto-sitemap t
+           :sitemap-function org-publish-sitemap-function
+           :sitemap-title "Tanner Hoelzel"
+           :sitemap-filename "index.org"
+           :sitemap-style list
+           :sitemap-sort-files anti-chronologically
+           :sitemap-format-entry org-publish-sitemap-format-entry)
+          ("website" :components ("resume" "content"))))
+#+end_src
+
+** Org Roam
+#+begin_src emacs-lisp
+  (setq org-roam-directory "~/Dropbox/org-roam")
+#+end_src
+
+** Org Agenda
+Using the agenda allows scheduling future events, maintaining a todo
+list, and logging tasks. Let's put it at hand:
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "H-a") 'org-agenda-list)
+(global-set-key (kbd "H-t") 'org-todo-list)
+#+end_src
+
+The agenda can be rebuild at any time ~org-agenda-redo~.
+
+#+begin_src emacs-lisp
+  (setq org-default-notes-file (concat org-directory "misc.org"))
+  (setq org-agenda-files '("~/Dropbox/org-agenda/"))
+#+end_src
+
+*** Scheduling events
+Scheduling future events is accomplished simply by adding a timestamp
+to an org entry. The schedule can then be viewed with ~org-agenda~.
+
+*** Logging time
+Logging tasks can be accomplished by clocking in and out with the
+desired keybindings. You can view a log of your day at any time with
+~org-agenda-log-mode~.
+
+Clocking in and out is done a lot, so let's make those single
+keystrokes:
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "H-i") 'org-clock-in)
+(global-set-key (kbd "H-o") 'org-clock-out)
+#+end_src
+
+I also like to add notes to tasks as I complete them:
+
+#+begin_src emacs-lisp
+  (setq org-log-note-clock-out 't)
+#+end_src
+
+You can see clock time with ~org-agenda-clockreport-mode~.
+
+It is possible to clock out of a task by marking that task as
+completed, but this doesn't prompt for a log note.
+
+*** Managing TODOs
+By default, TODOs have two states: TODO and DONE. Let's add some more,
+trading simplicity for expressiveness:
+
+#+begin_src emacs-lisp
+  (setq org-todo-keywords
+        '((sequence "TODO" "|" "WAITING" "DONE(!)" "CANCELED")
+          (sequence "OWED" "|" "BILLED(!)" "PAID")))
+#+end_src
+
+The ~(!)~ after ~DONE~ is *required* for a note to be recorded when a
+task moves into the ~DONE~ state. Let's hide state changes in the same
+drawer that we clock time with:
+
+#+begin_src emacs-lisp
+  (setq org-log-into-drawer t)
+#+end_src
+
+~org-todo-keywords~ is made up of lists of lists: I can add a new list
+of keywords if a new type of task corresponds to a different set of
+states!
+
+TODOs should have priority values so that the most important are
+automatically brought to attention.
+
+#+begin_src emacs-lisp
+  (setq org-priority-highest 1)
+  (setq org-priority-lowest 9)
+  (setq org-priority-default 5)
+#+end_src
+
+Now, items shown from ~org-todo-list~ are sifted by priority value.
+
+* Custom functions
 #+begin_src emacs-lisp
   (global-set-key (kbd "s-<backspace>")
                   (lambda () (interactive) (if (= (current-column) 0)
@@ -537,6 +690,10 @@ Reread these and fix zsh/shell stuff:
   (if (string-equal system-type "darwin")
       (when (memq window-system '(mac ns x))
         (exec-path-from-shell-initialize)));
+#+end_src
+
+#+begin_src emacs-lisp
+  (setq inferior-lisp-program "/opt/local/bin/sbcl")
 #+end_src
 
 * Linux Quirks
