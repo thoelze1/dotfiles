@@ -625,13 +625,17 @@ It is possible to clock out of a task by marking that task as
 completed, but this doesn't prompt for a log note.
 
 *** Managing TODOs
-By default, TODOs have two states: TODO and DONE. Let's add some more,
-trading simplicity for expressiveness:
+By default, TODOs have two states: TODO and DONE. We can use our own
+states, with different state spaces for different types of tasks:
 
 #+begin_src emacs-lisp
-  (setq org-todo-keywords
-        '((sequence "TODO" "|" "WAITING" "DONE(!)" "CANCELED")
-          (sequence "OWED" "|" "BILLED(!)" "PAID")))
+  (setq org-todo-keywords-tasks
+        '(sequence "TODO" "|" "WAITING" "DONE(!)" "CANCELED"))
+  (setq org-todo-keywords-billing
+        '(sequence "OWED" "|" "BILLED(!)" "PAID"))
+  (setq org-todo-keywords-billing
+        (list org-todo-keywords-tasks
+              org-todo-keywords-billing))
 #+end_src
 
 The ~(!)~ after ~DONE~ is *required* for a note to be recorded when a
