@@ -624,16 +624,20 @@ You can see clock time with ~org-agenda-clockreport-mode~.
 It is possible to clock out of a task by marking that task as
 completed, but this doesn't prompt for a log note.
 
+#+begin_src emacs-lisp
+(setq org-clock-out-when-done t)
+#+end_src
+
 *** Managing TODOs
 By default, TODOs have two states: TODO and DONE. We can use our own
 states, with different state spaces for different types of tasks:
 
 #+begin_src emacs-lisp
   (setq org-todo-keywords-tasks
-        '(sequence "TODO" "|" "WAITING" "DONE(!)" "CANCELED"))
+        '(sequence "TODO(t)" "|" "WAITING(w)" "DONE(d!)" "CANCELED(c)"))
   (setq org-todo-keywords-billing
-        '(sequence "OWED" "|" "BILLED(!)" "PAID"))
-  (setq org-todo-keywords-billing
+        '(sequence "OWED(o)" "|" "BILLED(b!)" "PAID(p)"))
+  (setq org-todo-keywords
         (list org-todo-keywords-tasks
               org-todo-keywords-billing))
 #+end_src
