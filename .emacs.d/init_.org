@@ -435,6 +435,20 @@ Display keyboard input properly in html: https://emacs.stackexchange.com/questio
   (setq org-html-text-markup-alist '((code . "<kbd>%s</kbd>")))
 #+end_src
 
+Let's organize headings with tags:
+#+begin_src emacs-lisp
+  (setq org-tag-alist
+        '(("emacs" . ?e)
+          ("finance" . ?f)
+          ("social" . ?s)
+          ("chore" . ?c)))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+(use-package org-contrib)
+(require 'ol-git-link)
+#+end_src
+
 #+begin_src emacs-lisp :tangle no
   (defun org-back-to-indentation ()
       "Move to start of text on current line"
