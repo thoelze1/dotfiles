@@ -1,4 +1,6 @@
 #+TITLE: Tanner's Emacs Config
+#+STARTUP: fold
+#+PROPERTY: header-args :results none
 
 This file gets loaded from [[file:init.el][~init.el~]] and configures emacs to my liking
 across a variety of systems.
@@ -9,6 +11,11 @@ org, you are able to organize and even do away with the overhead of
 additional org keywords (~#+begin_src~, etc) by using formatting, such
 as colored code blocks!
 
+* Generic routines
+#+begin_src emacs-lisp
+  (defun set-to-original (var)
+    (set var (eval (car (get var 'standard-value)))))
+#+end_src
 * Startup
 It is possible to declare the initial buffer with
 ~initial-buffer-choice~.
@@ -27,8 +34,10 @@ just add some of our own:
 
 #+begin_src emacs-lisp
   (require 'package)
-  (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
-  (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+  (set 'package-archives '(("gnu" . "https://elpa.gnu.org/packages/")))
+  (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+  (add-to-list 'package-archives '("nongnu" . "https://elpa.nongnu.org/nongnu/") t)
 #+end_src
 
 At this point, we can select packages for installation using the
@@ -37,7 +46,7 @@ At this point, we can select packages for installation using the
 ~package-initialize~. Then, packages can be used right away just by
 using them, or by explicitly using ~require~:
 
-#+begin_src emacs-lisp :exports none
+#+begin_src emacs-lisp :tangle no
   (setq package-selected-packages
         '(org-roam
           minibuffer-line
@@ -80,6 +89,9 @@ abstract not only package loading, but also package installation:
   (setq use-package-always-ensure t)
 #+end_src
 
+The benefits of use-package are package pinning and automatic
+installation. See [[https://www.reddit.com/r/emacs/comments/8ua8e6/is_it_possible_specify_repository_preference_with/][this reddit thread]] for more.
+
 ** Within Guix
 I don't yet have a good reason to manage my Emacs packages in
 Guix. Managing packages within Emacs has the benefit of simplicity and
@@ -102,7 +114,20 @@ Any local
   (require 'vimgolf)
 #+end_src
 
-* Customization
+* Completion
+Use company mode in all buffers:
+#+begin_src emacs-lisp
+  (use-package company :pin gnu)
+  (add-hook 'after-init-hook 'global-company-mode)
+#+end_src
+
+* Project management
+Use projectile everywhere:
+#+begin_src emacs-lisp
+  (use-package projectile :pin melpa-stable)
+  (projectile-mode +1)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+#+end_src
 
 * Debugging
 #+begin_src emacs-lisp
@@ -114,13 +139,88 @@ Any local
   (add-hook 'dired-mode-hook 'auto-revert-mode)
 #+end_src
 
-* Paredit
+* LISP interaction
+Let's highlight matching parens. ~blink-matching-parens~ controls
+highlighting of parens immediately after insertion; ~show-paren-mode~
+is a minor mode that controls highlighting of parens based on cursor
+placement:
 #+begin_src emacs-lisp
-  (add-hook 'scheme-mode-hook #'enable-paredit-mode)
-  (add-hook 'emacs-lisp-mode-hook #'enable-paredit-mode)
+(show-paren-mode 1)
 #+end_src
+Use this to refactor adding of hooks:
+#+begin_src emacs-lisp
+    (setq lisp-mode-hooks '(scheme-mode-hook
+                            emacs-lisp-mode-hook
+                            clojure-mode-hook
+                            cider-repl-mode-hook))
+    (defun add-to-multiple-hooks (hooks function)
+      (mapc (lambda (hook) (add-hook hook function)) hooks))
+#+end_src
+** Scheme
+#+begin_src emacs-lisp
+  (use-package geiser :pin nongnu)
+  (use-package geiser-guile :pin nongnu)
+#+end_src
+** Paredit
+#+begin_src emacs-lisp
+  (add-to-multiple-hooks lisp-mode-hooks #'enable-paredit-mode)
+#+end_src
+#+begin_src emacs-lisp
+  (defun my-paredit-shove-back ()
+    "Like paredit-forward-slurp-sexp, but with point on the sexp to
+  be slurped rather than the sexp to be slurped into."
+    (interactive)
+    (save-excursion
+      (paredit-backward)
+      (paredit-forward-down)
+      (paredit-forward-slurp-sexp)))
+#+end_src
+#+begin_src emacs-lisp
+  (add-hook 'paredit-mode-hook
+	    (lambda () (local-set-key (kbd "C-M-(") #'paredit-wrap-round)))
+#+end_src
+** Rainbow Parens
+#+begin_src emacs-lisp
+  (use-package rainbow-delimiters :pin melpa-stable)
+  (add-to-multiple-hooks lisp-mode-hooks #'rainbow-delimiters-mode)
+#+end_src
+** Clojure/ClojureScript
+#+begin_src emacs-lisp
+  (defvar etags-clj-cljs-regexp
+    (concat "etags " "--regex='/[ \t\(]*def[a-z]* \([a-z!-]+\)/\1/' "
+                     "--regex='/[ \t\(]*ns \([a-z.]+\)/\1/'"))
 
-* Yasnippet
+  ;; Recursively generate tags for all *.clj files, 
+  ;; creating tags for def* and namespaces
+  (defun create-clj-tags (dir-name)
+    "Create tags file."
+    (interactive "DDirectory: ")
+    (shell-command
+     (format "find %s \! -name '.*' -name '*.clj' | xargs %s"
+             dir-name etags-clj-cljs-regexp)))
+
+  ;; Recursively generate tags for all *.cljs files, 
+  ;; creating tags for def* and namespaces
+  (defun create-cljs-tags (dir-name)
+    "Create tags file."
+    (interactive "DDirectory: ")
+    (shell-command
+     (format "find . \! -name '.*' -name '*.cljs' | xargs %s"
+             etags-clj-cljs-regexp)))
+
+  ;; Recursively generate tags for all *.clj and *.cljs files, 
+  ;; creating tags for def* and namespaces
+  (defun create-clj-cljs-tags (dir-name)
+    "Create tags file."
+    (interactive "DDirectory: ")
+    (shell-command
+     (format "find %s \! -name '.*' -name '*.clj' -name '*.cljs' | xargs %s"
+             dir-name etags-clj-cljs-regexp)))
+#+end_src
+#+begin_src emacs-lisp
+  (use-package html-to-hiccup)
+#+end_src
+* Templates
 #+begin_src emacs-lisp
 (use-package yasnippet)
   (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
@@ -134,15 +234,59 @@ Any local
   (global-set-key (kbd "M-x") #'helm-M-x)
   (global-set-key (kbd "C-x r b") #'helm-filtered-bookmarks)
   (global-set-key (kbd "C-x C-f") #'helm-find-files)
-(global-set-key (kbd "C-x b") #'helm-buffers-list)
+  (global-set-key (kbd "C-x b") #'helm-buffers-list)
   (helm-mode 1)
 #+end_src
 
-* Geiser
-
-* Desktop Environment
+I use helm-org for ~helm-org-agenda-files-headings~
 #+begin_src emacs-lisp
-  (setq-default mode-line-format nil)
+  (use-package helm-org :pin melpa-stable)
+#+end_src
+
+Helm-swoop is an improved searching interface:
+#+begin_src emacs-lisp
+  (use-package helm-swoop :pin melpa-stable)
+  (global-set-key (kbd "M-i") 'helm-swoop)
+  (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
+  (global-set-key (kbd "C-c M-i") 'helm-multi-swoop)
+  (global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
+
+  ;; When doing isearch, hand the word over to helm-swoop
+  (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+  ;; From helm-swoop to helm-multi-swoop-all
+  (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
+
+  ;; Instead of helm-multi-swoop-all, you can also use helm-multi-swoop-current-mode
+  (define-key helm-swoop-map (kbd "M-m") 'helm-multi-swoop-current-mode-from-helm-swoop)
+
+  ;; Move up and down like isearch
+  (define-key helm-swoop-map (kbd "C-r") 'helm-previous-line)
+  (define-key helm-swoop-map (kbd "C-s") 'helm-next-line)
+  (define-key helm-multi-swoop-map (kbd "C-r") 'helm-previous-line)
+  (define-key helm-multi-swoop-map (kbd "C-s") 'helm-next-line)
+
+  ;; Save buffer when helm-multi-swoop-edit complete
+  (setq helm-multi-swoop-edit-save t)
+
+    ;; Split direcion. 'split-window-vertically or 'split-window-horizontally
+  (setq helm-swoop-split-direction 'split-window-vertically)
+
+  ;; If nil, you can slightly boost invoke speed in exchange for text color
+  (setq helm-swoop-speed-or-color nil)
+
+  ;; ;; Go to the opposite side of line from the end or beginning of line
+  (setq helm-swoop-move-to-line-cycle t)
+
+  ;; Optional face for line numbers
+  ;; Face name is `helm-swoop-line-number-face`
+  (setq helm-swoop-use-line-number-face t)
+
+  ;; If you prefer fuzzy matching
+  (setq helm-swoop-use-fuzzy-match t)
+  #+end_src
+* Desktop interaction
+#+begin_src emacs-lisp
+  ;;(setq-default mode-line-format nil)
 
   (setq temp-max 25000)
   (setq temp-min 1000)
@@ -209,7 +353,10 @@ Any local
            " | "
            ))
 
-  (setq mode-line-format nil)
+  ;;(setq mode-line-format nil)
+  (setq-default mode-line-format '("%e" mode-line-front-space mode-line-mule-info mode-line-client mode-line-modified mode-line-remote mode-line-frame-identification mode-line-buffer-identification "   " mode-line-position
+                           (vc-mode vc-mode)
+                           "  " mode-line-modes mode-line-misc-info mode-line-end-spaces))
   #+end_src
 
 * Appearance
@@ -239,18 +386,38 @@ invisible.
   (setq ring-bell-function 'ignore)
 #+end_src
 
+#+begin_src emacs-lisp
+(set-frame-parameter nil 'width 100)
+#+end_src
+#+begin_src emacs-lisp
+  (use-package zenburn-theme
+    :defer t)
+  (load-theme 'zenburn t)
+#+end_src
+
+For some reason, this is causing problems, so I'm not exporting it:
+#+begin_src emacs-lisp :tangle no
+  (require 'font-lock)
+  (use-package font-lock
+    :init
+    :custom-face
+    (font-lock-comment-face ((t (:inherit font-lock-comment-face :italic t))))
+    (font-lock-doc-face ((t (:inherit font-lock-doc-face :italic t))))
+    (font-lock-string-face ((t (:inherit font-lock-string-face :italic t)))))
+#+end_src
+
 * Avy
 See https://github.com/abo-abo/avy/wiki/defcustom.
 
 #+begin_src emacs-lisp
   (setq avy-keys '(?f ?j ?d ?k ?s ?l ?a ?\; ?' ?v ?n ?c ?m ?x ?, ?z
-                   ?. ?b ?/ ?t ?u ?r ?i ?e ?o ?w ?p ?q ?\[ ?5 ?7 ?4
-                   ?8 ?3 ?9 ?2 ?0 ?1 ?- ?6 ?= ?\] ?\\ ?` ?F ?J ?D ?K
-                   ?S ?L ?A ?: ?\" ?V ?N ?C ?M ?X ?< ?Z ?> ?B ?? ?T
-                   ?U ?R ?I ?E ?O ?W ?P ?Q ?{ ?% ?& ?$ ?* ?# ?\( ?@
-                   ?\) ?! ?_ ?^ ?+ ?} ?| ?~))
+		   ?. ?b ?/ ?t ?u ?r ?i ?e ?o ?w ?p ?q ?\[ ?5 ?7 ?4
+		   ?8 ?3 ?9 ?2 ?0 ?1 ?- ?6 ?= ?\] ?\\ ?` ?F ?J ?D ?K
+		   ?S ?L ?A ?: ?\" ?V ?N ?C ?M ?X ?< ?Z ?> ?B ?? ?T
+		   ?U ?R ?I ?E ?O ?W ?P ?Q ?{ ?% ?& ?$ ?* ?# ?\( ?@
+		   ?\) ?! ?_ ?^ ?+ ?} ?| ?~))
   (setq avy-case-fold-search nil)
-  (global-set-key (kbd "H-a") 'avy-goto-char)
+  (global-set-key (kbd "H-j") 'avy-goto-char)
 #+end_src
 
 * Tabs and spaces
@@ -269,8 +436,13 @@ See https://github.com/abo-abo/avy/wiki/defcustom.
 * Auto-generated files
 Emacs generates (sometimes) helpful files, but litters them across the
 filesystem by default. Let's keep them all in one place.
+** ~customize~
+*** hi
+#+begin_src emacs-lisp
+  (setq custom-file (concat user-emacs-directory "/custom.el"))
+#+end_src
 
-** Backups and  autosaves
+* Backups and  autosaves
 Emacs uses "autosaves" and "backups" to prevent unintended loss of
 work. An autosave periodically saves the buffer of an open file, so
 that work not-yet-written to the filesystem is retained in the event
@@ -284,15 +456,14 @@ place so that they don't clutter up the filesystem:
   (setq backup-directory-alist `(("." . "~/.emacs.d/.backups"))
         auto-save-file-name-transforms `((".*", "~/.emacs.d/.autosaves/\\1" t)))
   (setq desktop-path '("~/.emacs.d/desktop"))
+  (setq auto-save-interval 150)
 #+end_src
 
-** ~customize~
-
+* Persistence between sessions
 #+begin_src emacs-lisp
-  (setq custom-file (concat user-emacs-directory "/custom.el"))
+  (desktop-save-mode 1)
 #+end_src
 * Keyboard Setup
-
 ** Hyper
 Once we add the ~hyper~ modifier Note how many bindings we can have
 for number keys! First, we have 10 number keys and 10 numbered
@@ -334,6 +505,15 @@ but for now it would be cool to free up these keybindings.
 But actually, it turns out doing so is a [[https://emacs.stackexchange.com/a/52334][huge fucking rabbit hole]], and
 so I won't (dare to) proceed until I have reason to. 
 
+* Git
+#+begin_src emacs-lisp
+  (use-package magit :pin melpa-stable)
+  (global-set-key (kbd "H-g") 'magit-status)
+  (setq magit-diff-paint-whitespace t)
+  (setq magit-diff-paint-whitespace-lines 'all)
+  (setq magit-diff-highlight-trailing t)
+  (setq magit-diff-highlight-indentation '())
+#+end_src
 * Buffers
 #+begin_src emacs-lisp
   (global-set-key (kbd "s-k") 'kill-this-buffer)
@@ -345,7 +525,6 @@ so I won't (dare to) proceed until I have reason to.
   (global-set-key (kbd "s-1") 'delete-other-windows)
   (global-set-key (kbd "s-2") 'split-window-below)
   (global-set-key (kbd "s-3") 'split-window-right)
-  (global-set-key (kbd "H-g") 'magit-status)
   (global-set-key (kbd "<S-f3>") 'kmacro-end-macro)
   (global-set-key (kbd "H-c") 'mc/edit-lines)
   (global-set-key (kbd "s-f") 'make-frame)
@@ -410,7 +589,7 @@ rollover, but these do:
 First some org-wide defaults.
 
 #+begin_src emacs-lisp
-  (setq org-directory "~/git/org/")
+  (setq org-directory "~/Dropbox/")
   (add-hook 'org-mode-hook 'turn-on-auto-fill)
   (add-hook 'org-mode-hook 'org-indent-mode) ; does this toggle?
   (setq org-src-tab-acts-natively t) ;; Src block indentation was horrible
@@ -420,8 +599,14 @@ First some org-wide defaults.
   (org-babel-do-load-languages
    'org-babel-load-languages '((scheme . t)))
   (setq org-list-allow-alphabetical t)
+  (setq org-startup-folded 'fold)
 #+end_src
 
+- TODO look into org-tempo and fix this
+#+begin_src emacs-lisp :tangle no
+  (add-to-list 'org-structure-template-alist
+               '("el" . "#begin_src emacs-lisp\n?\n#end_src"))
+#+end_src
 Add org-entities. See https://emacs.stackexchange.com/questions/36898/proper-way-to-add-to-org-entities-user
 #+begin_src emacs-lisp
   (setq org-entities-user
@@ -439,9 +624,11 @@ Let's organize headings with tags:
 #+begin_src emacs-lisp
   (setq org-tag-alist
         '(("emacs" . ?e)
-          ("finance" . ?f)
+          ("money" . ?m)
           ("social" . ?s)
-          ("chore" . ?c)))
+          ("chore" . ?c)
+          ("exercise" . ?x)
+          ("chelm")))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
@@ -449,16 +636,13 @@ Let's organize headings with tags:
 (require 'ol-git-link)
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
-  (defun org-back-to-indentation ()
-      "Move to start of text on current line"
-      (interactive)
-      (if (org-at-heading-p)
-          (let ()
-            (beginning-of-line)
-            (re-search-forward (concat "^\\(?:" outline-regexp "\\)")p
-                               nil t))
-        (back-to-indentation)))
+#+begin_src emacs-lisp
+  (setq org-special-ctrl-a/e t)
+  (setq org-special-ctrl-k t) ; This isn't working
+#+end_src
+
+#+begin_src emacs-lisp
+  (setq org-goto-interface 'outline-path-completion)
 #+end_src
 
 ** Keybindings
@@ -466,19 +650,26 @@ Some good keybindings:
 - =C=-=c= ='= for ~org-edit-special~
 
 #+begin_src emacs-lisp
-(add-hook 'org-mode-hook
-            (lambda ()
-              (local-set-key (kbd "<C-M-return>") 'org-insert-subheading)))
   (add-hook 'org-mode-hook
             (lambda ()
-              (local-set-key (kbd "M-m") 'org-back-to-indentation)))
+              (local-set-key (kbd "<C-M-return>") 'org-insert-subheading)))
   (global-set-key (kbd "H-c") 'org-capture)
   (global-set-key (kbd "C-c c") 'org-capture)
   (global-set-key (kbd "C-c r") 'org-refile)
   (global-set-key (kbd "C-c a") 'org-agenda)
 #+end_src
 
+** Org Babel
+The manual says this is dangerous, but let's do it anyway:
+
+#+begin_src emacs-lisp
+  (setq org-confirm-babel-evaluate nil)
+#+end_src
+
 ** Org Capture
+I want to be able to put the cursor exactly one line below the optional properties
+drawer. Using two newlines in the template almost works, but creates
+two newlines.
 #+begin_src emacs-lisp
   (setq org-capture-templates
                 '(("s" "SICP Exercise" entry
@@ -486,7 +677,7 @@ Some good keybindings:
                    "* %?")
                   ("j" "Journal" entry
                    (file (lambda () (concat org-directory "journal.org")))
-                   "* %U\n%?")
+                   "* %U\n%?" :clock-in t :clock-resume t)
                   ("q" "Quote" entry
                    (file (lambda () (concat org-directory "quotes.org")))
                    "* %?")
@@ -591,10 +782,16 @@ blog posts:
 
 ** Org Roam
 #+begin_src emacs-lisp
+  (use-package org-roam :pin melpa-stable)
   (setq org-roam-directory "~/Dropbox/org-roam")
 #+end_src
 
 ** Org Agenda
+Disclaimer: it seems that many things are difficult to do within ~org-agenda~:
+- [[https://emacs.stackexchange.com/questions/31683/schedule-org-task-for-last-day-of-every-month][Repeating on the last day of each month]]
+- [[https://emacs.stackexchange.com/questions/41446/org-mode-repeating-task-until][Repetition daily within a range]]
+- [[https://karl-voit.at/2017/01/15/org-clone-subtree-with-time-shift/][Repeating on certain days of the week]]
+
 Using the agenda allows scheduling future events, maintaining a todo
 list, and logging tasks. Let's put it at hand:
 
@@ -608,13 +805,50 @@ The agenda can be rebuild at any time ~org-agenda-redo~.
 #+begin_src emacs-lisp
   (setq org-default-notes-file (concat org-directory "misc.org"))
   (setq org-agenda-files '("~/Dropbox/org-agenda/"))
+  (setq org-agenda-start-on-weekday nil)
+  (setq org-agenda-time-grid '((daily today require-timed)
+                               (800 1000 1200 1400 1600 1800 2000)
+                               "......" "----------..."))
+#+end_src
+
+I use tags to categorize items more than filenames:
+
+#+begin_src emacs-lisp
+  (setq org-agenda-prefix-format
+        ' ((agenda . " %i %-12:c%?-12t% s")
+           (todo . " %-8:T ")
+           (tags . " %i %-12:c")
+           (search . " %i %-12:c")))
+#+end_src
+
+Let's add some custom views:
+
+#+begin_src emacs-lisp
+(setq org-agenda-custom-commands
+      '(("c" . "My Custom Agendas")
+        ("cu" "Unscheduled TODO"
+         ((todo ""
+                ((org-agenda-overriding-header "\nUnscheduled TODO")
+                 (org-agenda-skip-function '(org-agenda-skip-entry-if 'timestamp)))))
+         nil
+         nil)))
 #+end_src
 
 *** Scheduling events
 Scheduling future events is accomplished simply by adding a timestamp
 to an org entry. The schedule can then be viewed with ~org-agenda~.
 
+Some tips for org "habits":
+https://lists.gnu.org/archive/html/emacs-orgmode/2010-09/msg00406.html
+
+#+begin_src emacs-lisp
+(add-to-list 'org-modules 'org-habit)
+#+end_src
+
 *** Logging time
+:LOGBOOK:
+CLOCK: [2022-03-04 Fri 16:47]--[2022-03-04 Fri 16:48] =>  0:01
+:END:
 Logging tasks can be accomplished by clocking in and out with the
 desired keybindings. You can view a log of your day at any time with
 ~org-agenda-log-mode~.
@@ -642,13 +876,31 @@ completed, but this doesn't prompt for a log note.
 (setq org-clock-out-when-done t)
 #+end_src
 
+Searching for the item that you intend to clock into wastes time. By
+using helm, we can improve the clocking interface:
+
+#+begin_src emacs-lisp
+  (defun my-org-clock-in (prefix)
+    (interactive "P")
+    ;;(message "%s" prefix)
+    (if prefix
+        (save-window-excursion
+          (let ((original-buffer (current-buffer)))
+            (helm-org-agenda-files-headings)
+            (if (not (eq original-buffer (current-buffer)))
+                (org-clock-in))))
+      (org-clock-in)))
+
+  (global-set-key (kbd "H-i") 'my-org-clock-in)
+#+end_src
+
 *** Managing TODOs
 By default, TODOs have two states: TODO and DONE. We can use our own
 states, with different state spaces for different types of tasks:
 
 #+begin_src emacs-lisp
   (setq org-todo-keywords-tasks
-        '(sequence "TODO(t)" "|" "WAITING(w)" "DONE(d!)" "CANCELED(c)"))
+        '(sequence "TODO(t!)" "|" "WAITING(w!)" "DONE(d!)" "CANCELED(c!)"))
   (setq org-todo-keywords-billing
         '(sequence "OWED(o)" "|" "BILLED(b!)" "PAID(p)"))
   (setq org-todo-keywords
@@ -679,6 +931,17 @@ automatically brought to attention.
 
 Now, items shown from ~org-todo-list~ are sifted by priority value.
 
+#+begin_src emacs-lisp
+  (setq org-enforce-todo-dependencies t)
+#+end_src
+
+A problem: I have a recurring calendar item that I want to appear in
+the agenda 
+
+#+begin_src emacs-lisp
+  (setq org-agenda-todo-ignore-scheduled t)
+#+end_src
+
 * Custom functions
 #+begin_src emacs-lisp
   (global-set-key (kbd "s-<backspace>")
@@ -704,24 +967,149 @@ Not sure if this is still necessary?
   (add-hook 'emacs-startup-hook (lambda () (make-frame-visible)))
 #+end_src
 
-Reread these and fix zsh/shell stuff:
-- https://github.com/purcell/exec-path-from-shell
-- https://blog.flowblok.id.au/2013-02/shell-startup-scripts.html
+#+begin_src emacs-lisp
+  (setq inferior-lisp-program "/opt/local/bin/sbcl")
+#+end_src
 
+* Environment variables
+There are a few scenarios where emacs inherits a default set of
+environment variables rather than the complete set you want it to:
+- Launching Emacs as GUI app on OS X
+- Launching Emacs as daemon from launchd or systemd
+
+In such cases, we can use [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]]. This loads environment
+variables from your shell. Because of how shells work, it loads from
+~.zshenv~ rather than ~.zshrc~. So for everything to work, you must
+both put your environment variables in ~.zshenv~ and call
+~exec-path-from-shell-initialize~:
+
+Read this at some point:
+https://blog.flowblok.id.au/2013-02/shell-startup-scripts.html
+
+** Initializing Environment Variables
 #+begin_src emacs-lisp
   (if (string-equal system-type "darwin")
       (when (memq window-system '(mac ns x))
         (exec-path-from-shell-initialize)));
 #+end_src
 
-#+begin_src emacs-lisp
-  (setq inferior-lisp-program "/opt/local/bin/sbcl")
-#+end_src
+** Updating Environment Variables
+Use ~exec-path-from-shell-copy-env~
+
+** Inspecting Environment Variables
+Use ~getenv~
 
 * Linux Quirks
-This fixes som security issue:
+This fixes som security issue on linux (forget the link), and an issue
+on mac:
+- https://emacs.stackexchange.com/questions/68288/error-retrieving-https-elpa-gnu-org-packages-archive-contents
 
 #+begin_src emacs-lisp
-    (if (string-equal system-type "gnu/linux")
-        (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
+  (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
 #+end_src
+
+* Clojure
+#+begin_src emacs-lisp
+  (use-package clojure-mode)
+  (use-package cider)
+  (setq nrepl-use-ssh-fallback-for-remote-hosts 't)
+#+end_src
+
+* GPG
+#+begin_src emacs-lisp
+  (require 'epa-file)
+  (custom-set-variables '(epg-gpg-program  "/usr/local/bin/gpg"))
+  (epa-file-enable)
+#+end_src
+
+* Text editing
+#+begin_src emacs-lisp
+  (global-set-key (kbd "H-5") 'paredit-str-reindent)
+  (global-set-key (kbd "H-6") (lambda ()
+                                (interactive)
+                                (message
+                                 (number-to-string (line-length)))))
+
+  (defun dec (x) (- x 1))
+
+  (defun line-length ()
+    (let ((eol-pos (line-end-position)))
+      (dec (if (= (line-number-at-pos) 1)
+               eol-pos
+             (- eol-pos (line-end-position 0))))))
+
+  (defun paredit-sexp-multilinep ()
+    (interactive)
+    (save-excursion
+      (paredit-backward-up)
+      (let ((current-line (line-number-at-pos)))
+        (paredit-forward)
+        (not (= current-line (line-number-at-pos))))))
+
+
+  (defun paredit-str-block-reindent ()
+    (paredit-backward-up)
+    (paredit-forward-down)
+    (paredit-forward)
+    (while (let ((curr (point)))
+             (save-excursion
+               (paredit-forward-up)
+               (paredit-backward-down)
+               (< (point) curr)))
+      (paredit-forward)
+      (paredit-join-sexps)
+      ))
+  (defun paredit-str-reindent ()
+    (interactive)
+    (paredit-backward-up)
+    (paredit-open-round)
+    (insert "str ")
+    (paredit-forward-slurp-sexp)
+    (forward-char)
+    (paredit-reindent-defun)
+    (while (paredit-sexp-multilinep)
+      (move-end-of-line)
+      (insert " ")
+      (while (> (+ 1 (line-length)) fill-column)
+        (backward-word))
+      (paredit-split-sexp)
+      (delete-char 1)
+      (insert "\n")))
+
+  (defun paredit-str-reindent ()
+    (interactive)
+    (paredit-backward-up)
+    (paredit-open-round)
+    (insert "str ")
+    (paredit-forward-slurp-sexp)
+    (forward-char)
+    (clojure-fill-paragraph)
+    (while (paredit-sexp-multilinep)
+      (let (()))
+      (move-end-of-line nil)
+      (insert "__")
+      (clojure-fill-paragraph)
+      (paredit-backward-up)
+      (forward-char)
+      (delete-char 1)
+      (move-end-of-line nil)
+      (paredit-split-sexp)
+      (delete-char 1)
+      (insert "\n")
+      (forward-char)
+      (delete-horizontal-space)
+      (delete-char 1)
+      (delete-horizontal-space)
+      (indent-for-tab-command)))
+#+end_src
+#+begin_src emacs-lisp
+  (add-hook 'clojure-mode-hook
+            (lambda ()
+              (set-fill-column 80)))
+#+end_src
+
+* Syntax Highlighting
+#+begin_src emacs-lisp
+  (use-package osx-plist :pin melpa-stable)
+#+end_src
+
