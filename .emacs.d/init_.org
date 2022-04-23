@@ -1024,6 +1024,19 @@ on mac:
 
 * Text editing
 #+begin_src emacs-lisp
+  (add-hook 'clojure-mode-hook
+            (lambda ()
+              (set-fill-column 80)))
+#+end_src
+
+* Syntax Highlighting
+#+begin_src emacs-lisp
+  (use-package osx-plist :pin melpa-stable)
+#+end_src
+
+* Breaking a long string literal into lines
+** First Attempts
+#+begin_src emacs-lisp
   (global-set-key (kbd "H-5") 'paredit-str-reindent)
   (global-set-key (kbd "H-6") (lambda ()
                                 (interactive)
@@ -1105,72 +1118,98 @@ on mac:
       (delete-horizontal-space)
       (indent-for-tab-command)))
 #+end_src
+** A Functional Approach
 #+begin_src emacs-lisp
-  (add-hook 'clojure-mode-hook
-            (lambda ()
-              (set-fill-column 80)))
+  (defun region-to-string ()
+    (buffer-substring-no-properties (region-beginning) (region-end)))
+
+  (defun paredit-string-literal-to-string ()
+    (if (paredit-in-string-p)
+        (paredit-backward-up))
+    (mark-sexp)
+                                          ; (kill-region 0 0 t) ; BEG
+                                          ; and END cannot be nil (this
+                                          ; is a bug in emacs
+                                          ; documentation)
+                                          ; (current-kill 0 t)
+    (let ((s (region-to-string)))
+      (delete-region (region-beginning) (region-end))
+      s))
+
+  (defun paredit-break-str (str)
+    (let* ((str (paredit-string-literal-to-string))
+           (strs (break-string str)))
+      (put-string-back-into-buffer strs)))
+
 #+end_src
-
-* Syntax Highlighting
-#+begin_src emacs-lisp
-  (use-package osx-plist :pin melpa-stable)
-#+end_src
-
-* String formatting
-A first function, executed with point inside a string, will break the
-string into multiple lines of a maximum width according to the fill
-width. One version will break them hard, with each string (except for
-the last) reaching exactly the maximum fill width. Another version
-will be a softer break, breaking at whitespace as close to the maximum
-line width as possible. Another function will reformat a set of
-adjacent strings that are at incorrect lengths. This function will
-
-call a function that joins adjacent strings, which will rely on a
-predicate function for determining whether the next sexp is a string
-or not. Another function will be for finding possible functions to
-reindent 
+** Current Approach
 #+begin_src emacs-lisp
   (defun line-too-long-p ()
     (> (line-length) fill-column))
 
-  (defun room-to-break-str-p ()
-    (<= (inc (current-column)) fill-column))
+  (defun move-to-line-break ()
+    ;; Move forward one "word"
+    (re-search-forward " ")
+    ;; If we're beyond fill-column, we'll split here. If not, we want to
+    ;; split at the last word-delimiter (space) before fill-column.
+    (if (< (current-column) (dec fill-column))
+        (progn
+          (move-to-column (dec fill-column))
+          (re-search-backward " ")
+          (forward-char))))
 
-  (defun last-word-p ()
-    (let ((next-space (save-excursion
-                        (search-forward " ")
-                        (point)))
-          (closing-quote (save-excursion
-                           (paredit-forward-up)
-                           (point))))
-      (> next-space closing-quote)))
+  (defun split-line ()
+    (paredit-split-sexp)
+    (delete-char 1)
+    (insert "\n")
+    (forward-char))
 
-  (defun paredit-break-str ()
-    "Expects point to be anywhere within a one-line string not
-  containing tabs (i.e. its only whitespace is spaces). Breaks the
-  string at spaces or at fill-column so that each new, indented
-  line containing a component of the string (including the first
-  line, which contains characters before the first string
-  component, and the last line, which contains characters after the
-  final string component) either contains exactly one word, or does
-  not exceed fill-column."
+  (defun prev-sexp-string-p ()
+    (save-excursion
+      (paredit-backward)
+      (forward-char)
+      (paredit-in-string-p)))
+
+  (defun next-sexp-string-p ()
+    (save-excursion
+      (paredit-forward)
+      (paredit-forward)
+      (prev-sexp-string-p)))
+
+  (defun join-strs-around-point ()
+    "Joins all adjacent string literals around point."
     (interactive)
-    (while (line-too-long-p)
-      ; Should break at the end of the first word, because we want at
-      ; least one word per line. This covers the case where
-      (indent-for-tab-command)
-      (re-search-forward " ")
-      (if (room-to-break-str-p)
-          (progn
-            (while (room-to-break-str-p)
-              (re-search-forward " "))
-            (re-search-backward " ")
-            (forward-char))
-        (move-to-column (dec fill-column)))
-      (paredit-split-sexp)
-      (delete-char 1)
-      (insert "\n")
-      (forward-char)))"qfwqi uqwoieuoiq oiwquroiquoEoiqwu o o oquwieoiuqoiEqoiu oieurwoiewoieruqpqowieurpqoiw"
+    (if (paredit-in-string-p)
+        (paredit-backward-up))
+    ;; Move backward to first string literal
+    (while (prev-sexp-string-p)
+      (paredit-backward))
+    ;; Now join all following strs
+    (while (next-sexp-string-p)
+      (paredit-forward)
+      (paredit-join-sexps)
+      (paredit-backward-up)))
 
+  (defun paredit-fill-str ()
+    "Break string-literal(s) around point into shorter components,
+  maximizing line-width without exceeding fill-column. Similar to
+  `fill-paragraph', but does not alter whitespace of string literal.
+
+  Assumes that:
+    - point is within or at start of a string literal
+    - string literal already has the desired indentation
+    - string literal does not contain tabs or newlines"
+    (interactive)
+    (join-strs-around-point)
+    (forward-char)
+    ;; Now we repeatedly split the string until it fits. There is still
+    ;; an unhandled case where the final line is too long due to
+    ;; characters following the string...
+    (while (line-too-long-p)
+      (move-to-line-break)
+      (split-line)
+      (indent-for-tab-command))
+    ;; Move point to end of string
+    (paredit-forward-up))
 #+end_src
 
