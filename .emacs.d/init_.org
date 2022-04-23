@@ -1038,6 +1038,9 @@ on mac:
                eol-pos
              (- eol-pos (line-end-position 0))))))
 
+
+  ""
+
   (defun paredit-sexp-multilinep ()
     (interactive)
     (save-excursion
@@ -1111,5 +1114,63 @@ on mac:
 * Syntax Highlighting
 #+begin_src emacs-lisp
   (use-package osx-plist :pin melpa-stable)
+#+end_src
+
+* String formatting
+A first function, executed with point inside a string, will break the
+string into multiple lines of a maximum width according to the fill
+width. One version will break them hard, with each string (except for
+the last) reaching exactly the maximum fill width. Another version
+will be a softer break, breaking at whitespace as close to the maximum
+line width as possible. Another function will reformat a set of
+adjacent strings that are at incorrect lengths. This function will
+
+call a function that joins adjacent strings, which will rely on a
+predicate function for determining whether the next sexp is a string
+or not. Another function will be for finding possible functions to
+reindent 
+#+begin_src emacs-lisp
+  (defun line-too-long-p ()
+    (> (line-length) fill-column))
+
+  (defun room-to-break-str-p ()
+    (<= (inc (current-column)) fill-column))
+
+  (defun last-word-p ()
+    (let ((next-space (save-excursion
+                        (search-forward " ")
+                        (point)))
+          (closing-quote (save-excursion
+                           (paredit-forward-up)
+                           (point))))
+      (> next-space closing-quote)))
+
+  (defun paredit-break-str ()
+    "Expects point to be anywhere within a one-line string not
+  containing tabs (i.e. its only whitespace is spaces). Breaks the
+  string at spaces or at fill-column so that each new, indented
+  line containing a component of the string (including the first
+  line, which contains characters before the first string
+  component, and the last line, which contains characters after the
+  final string component) either contains exactly one word, or does
+  not exceed fill-column."
+    (interactive)
+    (while (line-too-long-p)
+      ; Should break at the end of the first word, because we want at
+      ; least one word per line. This covers the case where
+      (indent-for-tab-command)
+      (re-search-forward " ")
+      (if (room-to-break-str-p)
+          (progn
+            (while (room-to-break-str-p)
+              (re-search-forward " "))
+            (re-search-backward " ")
+            (forward-char))
+        (move-to-column (dec fill-column)))
+      (paredit-split-sexp)
+      (delete-char 1)
+      (insert "\n")
+      (forward-char)))"qfwqi uqwoieuoiq oiwquroiquoEoiqwu o o oquwieoiuqoiEqoiu oieurwoiewoieruqpqowieurpqoiw"
+
 #+end_src
 
