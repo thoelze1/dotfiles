@@ -220,6 +220,16 @@ Use this to refactor adding of hooks:
 #+begin_src emacs-lisp
   (use-package html-to-hiccup)
 #+end_src
+#+begin_src emacs-lisp
+  (use-package clojure-mode)
+  (use-package cider)
+  (setq nrepl-use-ssh-fallback-for-remote-hosts 't)
+#+end_src
+#+begin_src emacs-lisp
+  (add-hook 'clojure-mode-hook
+            (lambda ()
+              (set-fill-column 80)))
+#+end_src
 * Templates
 #+begin_src emacs-lisp
 (use-package yasnippet)
@@ -1008,13 +1018,6 @@ on mac:
   (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
 #+end_src
 
-* Clojure
-#+begin_src emacs-lisp
-  (use-package clojure-mode)
-  (use-package cider)
-  (setq nrepl-use-ssh-fallback-for-remote-hosts 't)
-#+end_src
-
 * GPG
 #+begin_src emacs-lisp
   (require 'epa-file)
@@ -1023,12 +1026,6 @@ on mac:
 #+end_src
 
 * Text editing
-#+begin_src emacs-lisp
-  (add-hook 'clojure-mode-hook
-            (lambda ()
-              (set-fill-column 80)))
-#+end_src
-
 * Syntax Highlighting
 #+begin_src emacs-lisp
   (use-package osx-plist :pin melpa-stable)
@@ -1142,7 +1139,7 @@ on mac:
       (put-string-back-into-buffer strs)))
 
 #+end_src
-** Current Approach
+** Working library
 #+begin_src emacs-lisp
   (defun line-too-long-p ()
     (> (line-length) fill-column))
