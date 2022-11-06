@@ -1209,4 +1209,8 @@ on mac:
     ;; Move point to end of string
     (paredit-forward-up))
 #+end_src
-
+* Python
+#+begin_src emacs-lisp
+(setq python-shell-interpreter "python3")
+#+end_src
+Now we can use ~C-c c-p~ to start a python REPL from a python buffer.
