@@ -794,6 +794,7 @@ blog posts:
 #+begin_src emacs-lisp
   (use-package org-roam :pin melpa-stable)
   (setq org-roam-directory "~/Dropbox/org-roam")
+  (org-roam-db-autosync-mode)
 #+end_src
 
 ** Org Agenda
