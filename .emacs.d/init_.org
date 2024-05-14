@@ -1,16 +1,21 @@
 #+TITLE: Tanner's Emacs Config
-#+STARTUP: fold
 #+PROPERTY: header-args :results none
 
 This file gets loaded from [[file:init.el][~init.el~]] and configures emacs to my liking
 across a variety of systems.
 
-When your init file is non-literate, you are forced to separate your
+When your init file is non-literate, you are forced to separate your            
 configuration into multiple files, adding complexity. With literate
 org, you are able to organize and even do away with the overhead of
 additional org keywords (~#+begin_src~, etc) by using formatting, such
 as colored code blocks!
 
+* Documentation
+
+* To Do
+- Assign hotkey to open the messages buffer
+- Hotkey emacs directory node
+  
 * Generic routines
 #+begin_src emacs-lisp
   (defun set-to-original (var)
@@ -26,11 +31,28 @@ It is possible to declare the initial buffer with
 
 * Package management
 There are several ways to manage emacs packages, both within and
-without emacs.
+without emacs. A quick primer from a [[https://www.reddit.com/r/emacs/comments/fxry79/comment/fmw514b/][reddit comment]]:
+- Melpa and GNU Elpa are two websites hosting packages.
+- ELPA stands for Emacs Lisp Package Archive.
+- package.el is the client for ELPA.
+- use-package is not a package manager, for example, you can't upgrade
+  and delete package with it, though it provides builtin wrapper for
+  installing package using package.el. I treat use-package as
+  progn. One issue on use-package is that the code was too difficult
+  for me to understand and I believe don't put anything I can't
+  understand in my init file, and my use of use-package breaks the
+  rule.
+- straight.el is another package manager. It doesn't download packages
+  from GNU Elpa or Melpa.
+
 ** Within Emacs
-Emacs has a built-in package manager, ~package.el~. By default, its
-sole repository is GNU's [[https://elpa.gnu.org][ELPA]] (Emacs Lisp Package Archive), but we can
-just add some of our own:
+There are various package managers within Emacs. Emacs has a built-in
+package manager, ~package.el~. ~use-package~ is a wrapper for
+~package.el~. ~straight.el~ is another package manager.
+
+*** package.el
+By default, its sole repository is GNU's [[https://elpa.gnu.org][ELPA]] (Emacs Lisp Package
+Archive), but we can just add some of our own:
 
 #+begin_src emacs-lisp
   (require 'package)
@@ -75,6 +97,7 @@ Doing this, however, separates the package installation,
 loading, and configuration which defeats encapsulation and
 scales poorly across machines. Instead, we can use ~use-package~:
 
+*** use-package
 #+begin_src emacs-lisp
   (when (not (package-installed-p 'use-package))
     (package-refresh-contents)
@@ -92,6 +115,28 @@ abstract not only package loading, but also package installation:
 The benefits of use-package are package pinning and automatic
 installation. See [[https://www.reddit.com/r/emacs/comments/8ua8e6/is_it_possible_specify_repository_preference_with/][this reddit thread]] for more.
 
+*** straight.el
+When I first ran this, it hung emacs. I had to quit and then on the
+next execution it worked:
+#+begin_src emacs-lisp
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+         (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+        (bootstrap-version 6))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+          (url-retrieve-synchronously
+           "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+           'silent 'inhibit-cookies)
+        (goto-char (point-max))
+        (eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
+#+end_src
+I also added a line to ~early-init.el~.
+
+**** Uninstallation
+All you have to do is remove the straight-use-package line! Very cool:
+https://systemcrafters.net/advanced-package-management/using-straight-el/
 ** Within Guix
 I don't yet have a good reason to manage my Emacs packages in
 Guix. Managing packages within Emacs has the benefit of simplicity and
@@ -118,7 +163,7 @@ Any local
 Use company mode in all buffers:
 #+begin_src emacs-lisp
   (use-package company :pin gnu)
-  (add-hook 'after-init-hook 'global-company-mode)
+  ;(add-hook 'after-init-hook 'global-company-mode) ;; off because buggy in clj
 #+end_src
 
 * Project management
@@ -135,9 +180,22 @@ Use projectile everywhere:
 #+end_src
 
 * Dired
+Not sure what auto revert-mode is, I'll have to come back and document
+this.
+
+~toggle-truncate-lines~ is because wrapped lines are super ugly
+because dired is dumb
 #+begin_src emacs-lisp
   (add-hook 'dired-mode-hook 'auto-revert-mode)
+  (setq-default auto-revert-verbose nil)
+  (add-hook 'help-mode-hook 'auto-revert-mode) ;; doesn't work
+  (global-auto-revert-mode)
+  (add-hook 'dired-mode-hook (lambda () (toggle-truncate-lines 1)))
+  (add-hook 'dired-mode-hook #'dired-hide-details-mode)
 #+end_src
+
+Use ~dired-hide-details-mode~, bound to ~(~, to toggle long-list
+format.
 
 * LISP interaction
 Let's highlight matching parens. ~blink-matching-parens~ controls
@@ -232,15 +290,17 @@ Use this to refactor adding of hooks:
 #+end_src
 * Templates
 #+begin_src emacs-lisp
-(use-package yasnippet)
+  (use-package yasnippet)
   (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
   (add-hook 'scheme-mode-hook #'yas-minor-mode)
   (yas-reload-all)
+  (yas-global-mode 1)
 #+end_src
 
-* Helm
+* Autocompletion (helm)
 #+begin_src emacs-lisp
-  (use-package helm)
+  (use-package helm-core :pin melpa-stable)
+  (use-package helm :pin melpa-stable)
   (global-set-key (kbd "M-x") #'helm-M-x)
   (global-set-key (kbd "C-x r b") #'helm-filtered-bookmarks)
   (global-set-key (kbd "C-x C-f") #'helm-find-files)
@@ -250,50 +310,9 @@ Use this to refactor adding of hooks:
 
 I use helm-org for ~helm-org-agenda-files-headings~
 #+begin_src emacs-lisp
-  (use-package helm-org :pin melpa-stable)
+  (use-package helm-org)
 #+end_src
 
-Helm-swoop is an improved searching interface:
-#+begin_src emacs-lisp
-  (use-package helm-swoop :pin melpa-stable)
-  (global-set-key (kbd "M-i") 'helm-swoop)
-  (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
-  (global-set-key (kbd "C-c M-i") 'helm-multi-swoop)
-  (global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
-
-  ;; When doing isearch, hand the word over to helm-swoop
-  (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
-  ;; From helm-swoop to helm-multi-swoop-all
-  (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
-
-  ;; Instead of helm-multi-swoop-all, you can also use helm-multi-swoop-current-mode
-  (define-key helm-swoop-map (kbd "M-m") 'helm-multi-swoop-current-mode-from-helm-swoop)
-
-  ;; Move up and down like isearch
-  (define-key helm-swoop-map (kbd "C-r") 'helm-previous-line)
-  (define-key helm-swoop-map (kbd "C-s") 'helm-next-line)
-  (define-key helm-multi-swoop-map (kbd "C-r") 'helm-previous-line)
-  (define-key helm-multi-swoop-map (kbd "C-s") 'helm-next-line)
-
-  ;; Save buffer when helm-multi-swoop-edit complete
-  (setq helm-multi-swoop-edit-save t)
-
-    ;; Split direcion. 'split-window-vertically or 'split-window-horizontally
-  (setq helm-swoop-split-direction 'split-window-vertically)
-
-  ;; If nil, you can slightly boost invoke speed in exchange for text color
-  (setq helm-swoop-speed-or-color nil)
-
-  ;; ;; Go to the opposite side of line from the end or beginning of line
-  (setq helm-swoop-move-to-line-cycle t)
-
-  ;; Optional face for line numbers
-  ;; Face name is `helm-swoop-line-number-face`
-  (setq helm-swoop-use-line-number-face t)
-
-  ;; If you prefer fuzzy matching
-  (setq helm-swoop-use-fuzzy-match t)
-  #+end_src
 * Desktop interaction
 #+begin_src emacs-lisp
   ;;(setq-default mode-line-format nil)
@@ -430,11 +449,34 @@ See https://github.com/abo-abo/avy/wiki/defcustom.
   (global-set-key (kbd "H-j") 'avy-goto-char)
 #+end_src
 
-* Tabs and spaces
+* Whitespace (tabs, spaces, newlines)
+** Indentation
+The dumb way:
 #+begin_src emacs-lisp
-    (setq-default c-basic-offset 4)
-    (setq-default indent-tabs-mode nil)
-    (setq-default indicate-empty-lines t)
+  (setq-default c-basic-offset 4)
+  (setq-default indent-tabs-mode nil)
+  (setq-default indicate-empty-lines t)
+  (setq-default web-mode-attr-value-indent-offset 2)
+  (setq-default web-mode-sql-indent-offset 2)
+  (setq-default web-mode-attr-indent-offset 2)
+  (setq-default web-mode-markup-indent-offset 2)
+  (setq-default web-mode-code-indent-offset 2)
+#+end_src
+
+We can also infer:
+#+begin_src emacs-lisp
+  (use-package dtrt-indent :pin melpa-stable)
+  ;;(add-hook 'prog-mode-hook (lambda () (dtrt)
+  (dtrt-indent-global-mode)
+#+end_src
+
+** Final Newline (EOF)
+Many language modes set ~require-final-newline~ from
+~mode-require-final-newline~, which is ~t~ by default. I'm not sure
+why certain languages require a newline at EOF. Anyways, when these
+major modes enforce this final newline, it pollutes commits.
+#+begin_src emacs-lisp
+  (setq mode-require-final-newline nil)
 #+end_src
 
 * Enable functions
@@ -443,14 +485,18 @@ See https://github.com/abo-abo/avy/wiki/defcustom.
   (put 'upcase-region 'disabled nil)
 #+end_src
 
-* Auto-generated files
-Emacs generates (sometimes) helpful files, but litters them across the
-filesystem by default. Let's keep them all in one place.
-** ~customize~
-*** hi
+* ~customize~
+Emacs has a "customization" feature allowing customizing certain
+features through an interface. It can save those customizations to
+your config, albeit in an opaque way. When using a literate org
+config, any customizations automatically saved to the config will be
+overwritten. So, we need to keep these in a safe place:
 #+begin_src emacs-lisp
   (setq custom-file (concat user-emacs-directory "/custom.el"))
 #+end_src
+Now we can safely use ~customize~! Still, a separate file to dump
+nameless customizations is anithetical to a literate config. I'll look
+for a better way.
 
 * Backups and  autosaves
 Emacs uses "autosaves" and "backups" to prevent unintended loss of
@@ -523,12 +569,39 @@ so I won't (dare to) proceed until I have reason to.
   (setq magit-diff-paint-whitespace-lines 'all)
   (setq magit-diff-highlight-trailing t)
   (setq magit-diff-highlight-indentation '())
+
 #+end_src
-* Buffers
+Get a complete view of the directory in the status buffer by
+displaying extant files ignored by git:
 #+begin_src emacs-lisp
-  (global-set-key (kbd "s-k") 'kill-this-buffer)
+  (add-hook 'magit-status-sections-hook 'magit-insert-ignored-files)
+#+end_src
+** Auto commit'ing
+I use this for [[id:C01F75C8-ACDE-4236-A06F-2FAFA930EFD4][my zettel]].
+#+begin_src emacs-lisp
+  (use-package git-auto-commit-mode :pin melpa-stable)
+#+end_src
+As per the docs, I added a .dir-locals.el to my git repo. I also
+needed to adjust the default commit message. By default, the repo
+starts with ~buffer-file-name~ which is the absolute path to the file
+the buffer is visiting, then does some more transformation. I just
+want the file name relative to the git directory. Below, the argument
+is the absolute path:
+#+begin_src emacs-lisp
+  (defun gac-adjust-filename (filename)
+    (file-relative-name filename "/Users/tannerhoelzel/Dropbox/org-roam/"))
+  (setq gac-default-message 'gac-adjust-filename)
 #+end_src
 
+* Buffers
+Don't do this:
+#+begin_src emacs-lisp :export none
+  (global-set-key (kbd "s-k") 'kill-this-buffer)
+#+end_src
+Documentation says is can silently do nothing. Instead do this:
+#+begin_src emacs-lisp
+  (global-set-key (kbd "s-k") 'kill-current-buffer)
+#+end_src
 ** Windows
 #+begin_src emacs-lisp
   (global-set-key (kbd "s-0") 'delete-window)
@@ -655,6 +728,8 @@ Let's organize headings with tags:
   (setq org-goto-interface 'outline-path-completion)
 #+end_src
 
+Split code blocks with ~org-babel-demarcate-block~.
+
 ** Keybindings
 Some good keybindings:
 - =C=-=c= ='= for ~org-edit-special~
@@ -676,42 +751,70 @@ The manual says this is dangerous, but let's do it anyway:
   (setq org-confirm-babel-evaluate nil)
 #+end_src
 
+Source blocks are awesome, they even support diff's
+
+** Org Cite
+As of 2021 a builtin alternative to org-ref. To use it you must first
+generate a bibliography perhaps by using org-bibtex (which is also
+builtin). For testing purposes I pulled a [[id:CFE0AE0B-CAB3-4794-895F-F2B46DEEB912][BibTeX]] database
+#+begin_src bibtex
+  @book{friends,
+    title = {​{​{LaTeX}​​} and Friends},
+    author = {van Dongen, M.R.C.},
+    date = {2012},
+    location = {Berlin},
+    publisher = {Springer},
+    doi = {10.1007/978-3-642-23816-1},
+    isbn = {978-3-642-23816-1}
+  }
+#+end_src
+from
+https://www.miskatonic.org/2024/01/08/org-citations-basic/. Once you
+have your bibliography, you would refer to it either globally:
+#+begin_src emacs-lisp
+  (setq org-cite-global-bibliography '("/Users/tannerhoelzel/roam.bib"))
+#+end_src
+or using a file-local variable ~+bibliography:~ and then
+~org-cite-insert~ to insert the citation.
+
 ** Org Capture
 I want to be able to put the cursor exactly one line below the optional properties
 drawer. Using two newlines in the template almost works, but creates
 two newlines.
 #+begin_src emacs-lisp
+    (setq org-capture-templates-old
+                  '(("s" "SICP Exercise" entry
+                     (file "~/git/thoelze1.github.io/org/sicp-exercises.org")
+                     "* %?")
+                    ("j" "Journal" entry
+                     (file (lambda () (concat org-directory "journal.org")))
+                     "* %U\n%?" :clock-in t :clock-resume t)
+                    ("q" "Quote" entry
+                     (file (lambda () (concat org-directory "quotes.org")))
+                     "* %?")
+                    ("e" "Emacs feature" entry
+                     (file+headline (lambda () (concat org-directory "projects.org")) "Emacs features")
+                     "* TODO %?")
+                    ("p" "Project" entry
+                     (file (lambda () (concat org-directory "projects.org")))
+                     "* TODO %?")
+                    ("l" "Log" entry
+                     (file (lambda () (concat org-directory "log.org")))
+                     "* %U\n%?")
+                    ("r" "Book" entry
+                     (file+headline (lambda () (concat org-directory "reading.org")) "Books")
+                     "* TODO %?")
+                    ("m" "Miscellaneous" entry
+                     (file (lambda () (concat org-directory "misc.org")))
+                     "* TODO %?" nil nil)
+                    ("b" "Blog post ideas" entry
+                     (file (lambda () (concat org-directory "blog.org")))
+                     "* %? ")
+                    ("w" "Websites" entry
+                     (file+headline (lambda () (concat org-directory "reading.org")) "Websites")
+                     "* %? ")))
   (setq org-capture-templates
-                '(("s" "SICP Exercise" entry
-                   (file "~/git/thoelze1.github.io/org/sicp-exercises.org")
-                   "* %?")
-                  ("j" "Journal" entry
-                   (file (lambda () (concat org-directory "journal.org")))
-                   "* %U\n%?" :clock-in t :clock-resume t)
-                  ("q" "Quote" entry
-                   (file (lambda () (concat org-directory "quotes.org")))
-                   "* %?")
-                  ("e" "Emacs feature" entry
-                   (file+headline (lambda () (concat org-directory "projects.org")) "Emacs features")
-                   "* TODO %?")
-                  ("p" "Project" entry
-                   (file (lambda () (concat org-directory "projects.org")))
-                   "* TODO %?")
-                  ("l" "Log" entry
-                   (file (lambda () (concat org-directory "log.org")))
-                   "* %U\n%?")
-                  ("r" "Book" entry
-                   (file+headline (lambda () (concat org-directory "reading.org")) "Books")
-                   "* TODO %?")
-                  ("m" "Miscellaneous" entry
-                   (file (lambda () (concat org-directory "misc.org")))
-                   "* TODO %?" nil nil)
-                  ("b" "Blog post ideas" entry
-                   (file (lambda () (concat org-directory "blog.org")))
-                   "* %? ")
-                  ("w" "Websites" entry
-                   (file+headline (lambda () (concat org-directory "reading.org")) "Websites")
-                   "* %? ")))
+                  '())
 #+end_src
 
 ** Org Export/Publish
@@ -765,6 +868,7 @@ blog posts:
   (setq org-export-with-toc 2)
   ;; https://miikanissi.com/blog/website-with-emacs.html
   ;; (setq website-header "~/git/thoelze1.github.io/org")
+  (setq org-html-postamble-format '(("en" "<p>hi</p>")))
   (setq org-publish-project-alist
         '(("resume"
            :base-directory "~/git/resume"
@@ -778,7 +882,7 @@ blog posts:
            :publishing-function org-html-publish-to-html
            :exclude "\\(?:index-header\\.org\\)" ;; (strings-to-regexp "index-header.org")
            :with-toc nil
-           :html-postamble nil
+           :html-postamble t
            :section-numbers nil
            :auto-sitemap t
            :sitemap-function org-publish-sitemap-function
@@ -790,11 +894,87 @@ blog posts:
           ("website" :components ("resume" "content"))))
 #+end_src
 
+** Org Attach
+You can attach external files to org-roam nodes. They are stored in
+the ~data~ subdirectory of your ~org~ directory.
+
 ** Org Roam
 #+begin_src emacs-lisp
-  (use-package org-roam :pin melpa-stable)
+  (use-package org-roam)
   (setq org-roam-directory "~/Dropbox/org-roam")
   (org-roam-db-autosync-mode)
+#+end_src
+The org-roam-ui recommends installing via straight. This installed
+another copy of org which broke my whole fucking emacs. Instead let's
+not use straight (yet).
+
+https://github.com/org-roam/org-roam-ui:
+
+#+begin_src emacs-lisp
+  (use-package org-roam-ui)
+#+end_src
+#+begin_src emacs-lisp :tangle no
+  (use-package org-roam-ui
+    :straight
+    (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
+    :after org-roam
+    ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+    ;;         a hookable mode anymore, you're advised to pick something yourself
+    ;;         if you don't care about startup time, use
+    ;;  :hook (after-init . org-roam-ui-mode)
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
+#+end_src
+
+I use org-roam to help organize files. Sometimes a node might simply
+represent an external files attached as an org-attachment.
+
+*** Tagging
+To be able to search by tags by default:
+#+begin_src emacs-lisp
+  (setq org-roam-node-display-template
+        (concat "${title:*} "
+                (propertize "${tags:10}" 'face 'org-tag)))
+#+end_src
+See https://github.com/org-roam/org-roam/pull/2054
+
+*** Dailies
+#+begin_src emacs-lisp :tangle no
+  (setq )
+  (setq org-roam-dailies-capture-templates
+        '(("d" "default" entry "* %?" :target
+           (file "~/git/thoelze1.github.io/org/sicp-exercises.org")
+           "* %?")
+          ("j" "Journal" entry
+           (file (lambda () (concat org-directory "journal.org")))
+           "* %U\n%?" :clock-in t :clock-resume t)
+          ("q" "Quote" entry
+           (file (lambda () (concat org-directory "quotes.org")))
+           "* %?")
+          ("e" "Emacs feature" entry
+           (file+headline (lambda () (concat org-directory "projects.org")) "Emacs features")
+           "* TODO %?")
+          ("p" "Project" entry
+           (file (lambda () (concat org-directory "projects.org")))
+           "* TODO %?")
+          ("l" "Log" entry
+           (file (lambda () (concat org-directory "log.org")))
+           "* %U\n%?")
+          ("r" "Book" entry
+           (file+headline (lambda () (concat org-directory "reading.org")) "Books")
+           "* TODO %?")
+          ("m" "Miscellaneous" entry
+           (file (lambda () (concat org-directory "misc.org")))
+           "* TODO %?" nil nil)
+          ("b" "Blog post ideas" entry
+           (file (lambda () (concat org-directory "blog.org")))
+           "* %? ")
+          ("w" "Websites" entry
+           (file+headline (lambda () (concat org-directory "reading.org")) "Websites")
+           "* %? ")))
 #+end_src
 
 ** Org Agenda
@@ -910,13 +1090,16 @@ By default, TODOs have two states: TODO and DONE. We can use our own
 states, with different state spaces for different types of tasks:
 
 #+begin_src emacs-lisp
-  (setq org-todo-keywords-tasks
-        '(sequence "TODO(t!)" "|" "WAITING(w!)" "DONE(d!)" "CANCELED(c!)"))
-  (setq org-todo-keywords-billing
-        '(sequence "OWED(o)" "|" "BILLED(b!)" "PAID(p)"))
-  (setq org-todo-keywords
-        (list org-todo-keywords-tasks
-              org-todo-keywords-billing))
+    (setq org-todo-keywords-tasks
+          '(sequence "TODO(t!)" "|" "WAITING(w!)" "DONE(d!)" "CANCELED(c!)"))
+    (setq org-todo-keywords-billing
+          '(sequence "OWED(o)" "|" "BILLED(b!)" "PAID(p)"))
+    (setq org-todo-keywords-inventory
+          '(sequence "|" "OWNED" "LENT" "LOST" "WANTED"))
+    (setq org-todo-keywords
+          (list org-todo-keywords-tasks
+                org-todo-keywords-billing
+                org-todo-keywords-inventory))
 #+end_src
 
 The ~(!)~ after ~DONE~ is *required* for a note to be recorded when a
@@ -1027,6 +1210,20 @@ on mac:
 #+end_src
 
 * Text editing
+#+begin_src emacs-lisp
+  (defun my-open-line ()
+    "My preferred behavior for open-line"
+    (interactive)
+    (save-excursion
+      (default-indent-new-line 1)))
+#+end_src
+We cannot and should not do the following:
+#+begin_src emacs-lisp :tangle no
+  (defun open-line ()
+    (interactive)
+    (call-interactively my-open-line))
+#+end_src
+~magit~, for one, uses ~open-line~ and so we shouldn't change its behavior
 * Syntax Highlighting
 #+begin_src emacs-lisp
   (use-package osx-plist :pin melpa-stable)
@@ -1044,10 +1241,18 @@ on mac:
   (defun dec (x) (- x 1))
 
   (defun line-length ()
-    (let ((eol-pos (line-end-position)))
-      (dec (if (= (line-number-at-pos) 1)
-               eol-pos
-             (- eol-pos (line-end-position 0))))))
+    (let ((eol-pos (save-excursion
+                     (move-end-of-line nil)
+                     (point)))
+          (bol-pos (save-excursion
+                     (move-beginning-of-line nil)
+                     (point))))
+      (- eol-pos bol-pos)))
+
+  (let ((eol-pos (line-end-position)))
+    (dec (if (= (line-number-at-pos) 1)
+             eol-pos
+           (- eol-pos (line-end-position 0)))))
 
 
   ""
@@ -1142,6 +1347,15 @@ on mac:
 #+end_src
 ** Working library
 #+begin_src emacs-lisp
+  (defun line-length ()
+      (let ((eol-pos (save-excursion
+                       (move-end-of-line nil)
+                       (point)))
+            (bol-pos (save-excursion
+                       (move-beginning-of-line nil)
+                       (point))))
+        (- eol-pos bol-pos)))
+
   (defun line-too-long-p ()
     (> (line-length) fill-column))
 
@@ -1212,6 +1426,400 @@ on mac:
 #+end_src
 * Python
 #+begin_src emacs-lisp
-(setq python-shell-interpreter "python3")
+  (setq python-shell-interpreter "/Users/tannerhoelzel/shell3.sh")
+
+  (setq python-shell-interpreter "python3")
+(setq python-shell-interpreter-args "")
 #+end_src
 Now we can use ~C-c c-p~ to start a python REPL from a python buffer.
+
+Sources:
+- https://stackoverflow.com/questions/25669809/how-do-you-run-python-code-using-emacs#:~:text=Once%20you%20open%20your%20python,one%20containing%20the%20python%20file.
+- https://emacs.stackexchange.com/questions/36463/specifying-python-version-in-run-python
+* JavaScript
+For the lsp-backend, I found that `m-x install-server` didn't work for
+ts-ls. But this did:
+#+begin_src bash
+npm i -g typescript-language-server; npm i -g typescript
+#+end_src
+
+Also, the default JS mode uses its own function (~js-find-symbol~)
+instead of xref! Hate that. Supposedly people like this other
+mode:
+#+begin_src emacs-lisp
+  (use-package js2-mode
+    :pin melpa-stable
+    :mode "\\.js\\'")
+  (setq js2-strict-missing-semi-warning nil)
+  (define-key js2-mode-map (kbd "M-.") nil)
+#+end_src
+
+I should change that so that it doesn't trigger for react files. Also,
+it might not offer much over js-mode, in which case I should consider
+using js-mode for JS files and just remapping ~M-.~ to
+~xref-find-definitions~.
+** React
+Check out this nice tutorial from lsp-mode:
+https://emacs-lsp.github.io/lsp-mode/tutorials/reactjs-tutorial/
+
+Remember that js2-mode doesn't support JSX and instead recommends
+using Emacs' builtin js-mode
+** Vue
+*** Syntax Highlighting
+I tried installing [[https://github.com/AdamNiederer/vue-mode][vue-mode]] according to the installation
+instructions, but I kept running into an error (see [[https://github.com/dgutov/mmm-mode/issues/112][GitHub issue]]). I
+was unable to resolve the issue and the project is unmaintained in
+November 2022. I found [[https://github.com/AdamNiederer/vue-mode/issues/109][this issue]] where polymode is recommended over
+vue-mode. In this issue I discovered that web-mode is an alternative
+to vue-mode:
+#+begin_src emacs-lisp
+  (use-package web-mode
+    :pin melpa-stable
+    :mode "\\.vue\\'"
+    :config
+    (add-hook 'vue-mode-hook #'lsp))
+#+end_src
+
+*** Indentation
+The project I'm working on doesn't use indentation in the ~<script>~
+block of a ~.vue~ file. See
+https://emacs.stackexchange.com/questions/30587/web-mode-uses-1-space-indent-instead-of-2:
+#+begin_src emacs-lisp
+  (setq web-mode-script-padding 0)
+#+end_src
+
+*** Jump to definition/declaration
+We'll use ~lsp-mode~ for this. General instructions for lsp:
+https://emacs-lsp.github.io/lsp-mode/page/installation/
+
+**** Vetur (Vue2)
+Instructions for Vue2 lsp support:
+https://emacs-lsp.github.io/lsp-mode/page/lsp-vetur/
+#+begin_src emacs-lisp :tangle no
+  (use-package lsp-mode
+    :pin melpa
+    :straight nil)
+#+end_src
+We also need to install the server. I just did this manually:
+#+begin_src bash
+  npm install -g vls
+#+end_src
+We also could have used ~M-x lsp-install-server~. According to this
+[[https://github.com/emacs-lsp/lsp-mode/issues/1380][issue]], you also have to install typescript:
+#+begin_src bash
+  npm install -g typescript
+#+end_src
+
+**** Volar (Vue3)
+The ~vetur~ LSP implementation for Vue has been replaced by ~volar~,
+but it is in the process of being merged into ~lsp-mode~ as of
+November 2022 and I couldn't get it to work.
+#+begin_src emacs-lisp :tangle no
+  (straight-use-package
+   '(lsp-volar :type git :host github :repo "jadestrong/lsp-volar"))
+  (use-package lsp-volar
+    :straight t)
+  (straight-use-package
+   '(lsp-mode :type git :host github :repo "emacs-lsp/lsp-mode"))
+  (use-package lsp-mode
+    :straight t)
+  ;;(setq lsp-enabled-clients '(
+#+end_src
+
+* Shell
+I don't like how the ~eshell~ prompt is editable:
+#+begin_src emacs-lisp
+  (setq comint-prompt-read-only t)
+#+end_src
+* Search
+** File-wide
+Helm-swoop is an improved searching interface:
+#+begin_src emacs-lisp
+  (use-package helm-swoop :pin melpa-stable)
+  (global-set-key (kbd "M-i") 'helm-swoop)
+  (setq helm-swoop-speed-or-color nil)
+  (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
+  (global-set-key (kbd "C-c M-i") 'helm-multi-swoop)
+  (global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
+
+  ;; When doing isearch, hand the word over to helm-swoop
+  (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+  ;; From helm-swoop to helm-multi-swoop-all
+  (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
+
+  ;; Instead of helm-multi-swoop-all, you can also use helm-multi-swoop-current-mode
+  (define-key helm-swoop-map (kbd "M-m") 'helm-multi-swoop-current-mode-from-helm-swoop)
+
+  ;; Move up and down like isearch
+  (define-key helm-swoop-map (kbd "C-r") 'helm-previous-line)
+  (define-key helm-swoop-map (kbd "C-s") 'helm-next-line)
+  (define-key helm-multi-swoop-map (kbd "C-r") 'helm-previous-line)
+  (define-key helm-multi-swoop-map (kbd "C-s") 'helm-next-line)
+
+  ;; Save buffer when helm-multi-swoop-edit complete
+  (setq helm-multi-swoop-edit-save t)
+
+  ;; Split direcion. 'split-window-vertically or 'split-window-horizontally
+  (setq helm-swoop-split-direction 'split-window-vertically)
+
+  ;; If nil, you can slightly boost invoke speed in exchange for text color
+  (setq helm-swoop-speed-or-color nil)
+
+  ;; ;; Go to the opposite side of line from the end or beginning of line
+  (setq helm-swoop-move-to-line-cycle t)
+
+  ;; Optional face for line numbers
+  ;; Face name is `helm-swoop-line-number-face`
+  (setq helm-swoop-use-line-number-face t)
+
+  ;; If you prefer fuzzy matching
+  (setq helm-swoop-use-fuzzy-match t)
+  #+end_src
+** Directory-wide (grep)
+There are so many good different tools for this! Deft, ripgrep, silver
+searcher, consult, velocity. See here for feature comparison:
+https://beyondgrep.com/feature-comparison/
+
+Found some setting I like here:
+https://endlessparentheses.com/exclude-directories-from-grep.html
+#+begin_src emacs-lisp
+  (add-to-list 'grep-find-ignored-directories "node_modules")
+  (add-hook 'grep-mode-hook (lambda () (toggle-truncate-lines 1)))
+#+end_src
+
+But actually, code searching can be so much better than ~grep.el~!
+With helm-projectile, it's a directory wide ~swoop~:
+#+begin_src emacs-lisp
+  (use-package helm-projectile :pin melpa-stable)
+  (use-package helm-ag :pin melpa-stable)
+  (use-package ag :pin melpa-stable)
+#+end_src
+
+* Window decoration (line numbers & /the fringe/)
+Disclaimer: I'm still not sure I'll stick with line numbers. They take
+up a lot of real estate. I've tried to mitigate this, e.g. by
+narrowing the width with ~M-x customize-group display-line-numbers~ to
+change to a more compact font.
+
+The bottom line is that there needs to be a visual separation between
+an application and the edge of the screen. The fringe is basically
+useless--well, it indicates end-of-buffer and line-wrap, at least. But
+line numbers yield that information and more while using just a little
+more space. Plus, they help distinguish files where line numbers
+matter from files where they don't.
+
+I do like the column number too:
+#+begin_src emacs-lisp
+  (column-number-mode)
+#+end_src
+
+** Appearance
+I'm going to leave some notes hear about customization that lives in
+~./custom.el~
+- I tried to use a compact font for line numbers, but it didn't
+  work. It almost worked, but numbers of with different numbers of
+  digits were centered differently, yielding a ~2px gap between 99 and
+  100 e.g.
+- Making the fringe, vertical border, and line number background the
+  same color is handy
+
+I've got to set up the fringe:
+#+begin_src emacs-lisp
+  (setq fringe-mode 4)
+#+end_src
+
+TODO: programatically set a buffer-local left fringe width depending
+on whether line numbers are enabled or not (if line numbers are
+enabled, there should be no left fringe).
+
+Since I'm using line numbers, I don't need to see the
+line-continuation glyph in the fringe:
+#+begin_src emacs-lisp
+  (add-to-list 'fringe-indicator-alist '(continuation . nil))
+#+end_src
+There's definitely a way to provide custom bitmaps, but my goal is not
+to see those glyphs and so I don't need to spend time figuring out how
+to do that.
+
+And this improves the color of the vertical border (should probably
+be edited to pull from zenburn):
+#+begin_src emacs-lisp
+  (set-face-foreground 'vertical-border "#383838")
+#+end_src
+
+Unresolved questions:
+- Why did the compact font not work? Is that a bug or expected
+  behavior?
+- Why in some buffers is extra space added before the line number?
+- Why doesn't dynamic width for line numbers work?
+
+** Line Numbers
+*** Blacklist model                                              :noexport:
+
+The thinking with a blacklist model is that I want line numbers when
+working with pretty much any text file, some of which have no standard
+extension (.env, .old, .local, etc). So we enable globally:
+
+#+begin_src emacs-lisp
+  (global-display-line-numbers-mode)
+#+end_src
+
+This affects all modes except some those that turn them off by
+default, like magit:
+https://github.com/magit/magit/commit/c19d8bb4f7d436ff7654be57601703ef517d6d4d
+
+But some other modes shouldn't have line numbers either, like
+~dired~. Luckily, we can use ~display-line-numbers--turn-on~ to
+customize which buffers ~global-display-line-numbers-mode~ affect:
+#+begin_src emacs-lisp
+  (defvar display-line-numbers--exempt-modes
+    '(vterm-mode
+      eshell-mode
+      shell-mode
+      term-mode
+      ansi-term-mode
+      dired-mode))
+
+  (defun display-line-numbers--turn-on ()
+    "Turn on line numbers except for certain major modes.
+  Exempt major modes are defined in `display-line-numbers--exempt-modes'."
+    (unless (or (minibufferp)
+                (member major-mode display-line-numbers--exempt-modes))
+      (display-line-numbers-mode)))
+#+end_src
+I got this from https://www.emacswiki.org/emacs/LineNumbers.
+
+If ~display-line-numbers--turn-on~ weren't available, we could use
+this instead:
+
+#+begin_src emacs-lisp :exports none
+  (add-hook 'dired-mode-hook (lambda () (display-line-numbers-mode 0)) 100)
+#+end_src
+
+Which uses the optional ~depth~ parameter of ~add-hook~
+(https://www.gnu.org/software/emacs/manual/html_node/elisp/Setting-Hooks.html).
+feels hacky though.
+
+Still, there are modes that it is more difficult to turn them off
+for.
+
+Unfortunately, I was never able to turn off line numbers in helm or
+customize, so I use the following whitelist model:
+
+*** Whitelist model
+#+begin_src emacs-lisp
+  (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+  (add-hook 'fundamental-mode-hook 'display-line-numbers-mode)
+  (add-hook 'text-mode-hook 'display-line-numbers-mode)
+#+end_src
+
+* Tabs
+Also centaur-tabs
+#+begin_src emacs-lisp
+  (use-package centaur-tabs :pin melpa-stable)
+#+end_src
+* Neotree
+https://emacs.stackexchange.com/questions/31660/how-can-i-set-neotree-to-always-show-hidden-files
+#+begin_src emacs-lisp
+  (use-package neotree :pin melpa-stable)
+  (setq neo-theme 'ascii)
+  (setq-default neo-show-hidden-files t)
+#+end_src
+By default, it constantly automatically switches root to the current
+file's directory. Fix:
+#+begin_src emacs-lisp
+  (setq neo-autorefresh nil)
+#+end_src
+#+begin_src emacs-lisp
+  (use-package treemacs :pin melpa-stable)
+#+end_src
+* Word wrapping
+see ~toggle-truncate-lines~
+* Pair programming: floobits
+#+begin_src emacs-lisp
+  (use-package floobits :pin melpa-stable)
+#+end_src
+Then make an account, update your ~/.floorc.json. Then:
+- ~floobits-share-dir-public~ to share a project
+- ~floobits-add-to-workspace~ to add more files
+** flootty
+You can also install flootty:
+#+begin_src bash
+  pip install Flootty
+  flootty --create --url=https://floobits.com/owner/workspace
+#+end_src
+
+You can trivially use ~term~, ~eshell~, or ~shell~ to run flootty. But
+it would be cool if we could somehow connect to flootty with
+emacs. The "right" way to do this feels like using flootty to run a
+python repl as daemon, and then connect to it somehow with
+~run-python~. The way I have it working is:
+1. Write ~flootty.sh~:
+   #+begin_src bash
+     #!/bin/bash
+     /usr/local/bin/flootty --create --url=https://floobits.com/tanner/interviews --shell=/path/to/python.sh
+   #+end_src
+2. Write ~python.sh~:
+   #+begin_src bash
+     #!/bin/bash
+     python3
+   #+end_src
+3. Set up emacs:
+   #+begin_src emacs-lisp
+     (setq python-shell-interpreter "python3") ;;"/path/to/flootty.sh")
+   #+end_src
+
+There's something wrong but it sort of works
+* Popups
+When using functions that call ~compile~, the function
+~compilation-ask-about-save~ triggers a prompt to save buffer for each
+saved edited buffer. Often this causes a frustrating situation where
+the prompt is immediately hidden by another "reverting ..." message,
+preventing you from editing the command until you enter another
+(invalid) keystroke which rings the bell.
+#+begin_src emacs-lisp
+  (setq compilation-ask-about-save nil)
+#+end_src
+* dotenv
+#+begin_src emacs-lisp
+  (use-package dotenv-mode :pin melpa-stable)
+  (add-to-list 'auto-mode-alist '("\\.env\\..*\\'" . dotenv-mode))
+#+end_src
+* Code formatting html
+Can be delegated to LSP mode. Remember:
+- ~auto-fill-mode~ for hitting enter at end of line to indent (and get
+  different results than with ~fill-region~
+- ~sgml-pretty-print~, does something but also fucks stuff up
+- lsp-mode fucks up a lot
+#+begin_src emacs-lisp
+  (use-package prettier-js :pin melpa)
+#+end_src
+https://stackoverflow.com/questions/71007796/prettier-break-html-classes-in-multiple-lines
+https://github.com/prettier/prettier/issues/10918
+The bottom line here is that you shouldn't be writing HTML by hand in
+the first place. We also shouldn't have languages with insane syntax. 
+Compare the clojure style guide with the vue style guide:
+https://vuejs.org/style-guide/rules-essential.html#use-detailed-prop-definitions
+
+Future-proofing and fault. When committing these new files to the
+tradigro frontend repo, I have gone to great lengths to try to
+"future-proof" them so that people in the future can't go "oh ffs what
+was this guy thinking, this was a horrible design choice." In this
+case future proofing means choosing the right style now, because it's
+hard to change this later: do you do it all at once, as people commit
+(it's also error prone). I have this desire for revertability in other
+places: purely functional package management, and certainly outside of
+software too. Importantly, my desire to future-proof goes hand in hand
+with my anger towards others about poor design decisions. I place
+great responsibility in the hands of the creator which puts great
+pressure on me when I am in that role, and justifies great frustration
+when other people are in that role. Why do I pick both? If the two go
+hand-in-hand, why not just pick less of each? (Less) responsiblity,
+(less) frustration, (less) pressure.
+
+Dear god look at this syntax: https://v2.vuejs.org/v2/guide/class-and-style.html
+
+* Denote
+#+begin_src emacs-lisp
+  (straight-use-package 'denote)
+#+end_src
